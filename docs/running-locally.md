@@ -44,7 +44,7 @@ Tweak below command with a path pointing to `.github` and configuration file:
 ````
 docker run --rm --name octo-linter \
   -v /path/to/.github:/dot-github -v $(pwd):/config \
-  mikolajgasior/octo-linter:v3.0.0 \
+  mikolajgasior/octo-linter:v3.1.0 \
   lint -p /dot-github -l WARN -c /config/config.yml -m
 ````
 
