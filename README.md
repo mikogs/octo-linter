@@ -1,7 +1,5 @@
 # octo-linter
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/mikogs/octo-linter)](https://goreportcard.com/report/github.com/mikogs/octo-linter)
-
 ![octo-linter](octo-linter.png "octo-linter")
 
 A tool that validates GitHub Actions workflow and action YAML files. It checks for syntax errors, such as
