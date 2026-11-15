@@ -1,6 +1,6 @@
 # octo-linter
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/mikolajgasior/octo-linter)](https://goreportcard.com/report/github.com/mikolajgasior/octo-linter)
+[![Go Report Card](https://goreportcard.com/badge/github.com/mikogs/octo-linter)](https://goreportcard.com/report/github.com/mikogs/octo-linter)
 
 ![octo-linter](octo-linter.png "octo-linter")
 
@@ -13,8 +13,28 @@ have created few years ago.  In the new version, rules can be configured, checks
 and log level command line argument has been introduced.  Also, each rule's source code is now extracted
 to a separate file for better maintenance.
 
-## Full documentation
-[Link to docs](https://mikolajgasior.github.io/octo-linter/)
+## Documentation
+
+Complete documentation can be found in the `docs` directory.
+
+### Getting Started
+- [Configuration](docs/configuration.md)
+- [Building](docs/building.md)
+- [Running locally](docs/running-locally.md)
+- [GitHub Actions Workflow](docs/github-actions-workflow.md)
+- [Demo](docs/demo.md)
+
+### Rules
+- [Filenames](docs/rules/filenames.md)
+- [Naming Conventions](docs/rules/naming_conventions.md)
+- [Required Fields](docs/rules/required_fields.md)
+- [Referenced Variables](docs/rules/referenced_variables.md)
+- [Used Actions](docs/rules/used_actions.md)
+- [Dependencies](docs/rules/dependencies.md)
+- [Workflow Runners](docs/rules/workflow_runners.md)
+
+### Development
+- [Adding a New Rule](docs/add_rule.md)
 
 ## Running
 Check below help message for `lint` command:
@@ -60,7 +80,7 @@ Note that the image has to be present.
 Replace the path to the `.github` directory.
 
 ````
-git clone https://github.com/mikolajgasior/octo-linter.git
+git clone https://github.com/mikogs/octo-linter.git
 
 mkdir output
 
@@ -69,7 +89,7 @@ docker run --platform=linux/amd64 --rm --name octo-linter \
   -v $(pwd)/dot-github:/dot-github \
   -v $(pwd):/config \
   -v $(pwd)/output:/output \
-  mikolajgasior/octo-linter:v3.1.0 \
+  mikogs/octo-linter:v3.1.0 \
   lint -p /dot-github -l WARN -c /config/config.yml -o /output -u 10
 ````
 

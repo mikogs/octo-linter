@@ -9,7 +9,7 @@ runs:
       uses: actions/checkout@v4
 
     - name: Calling external action overridden from local source
-      uses: mikolajgasior/read-from-local-path@v1
+      uses: mikogs/read-from-local-path@v1
       id: action-1
       #with:
       #  local-src-input-1: "abc123"

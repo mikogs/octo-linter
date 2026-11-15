@@ -39,10 +39,10 @@ rules:
 
 overrides:
   external_actions_paths:
-    mikolajgasior/read-from-local-path@v1: ./overrides/local-source
+    mikogs/read-from-local-path@v1: ./overrides/local-source
 
   external_actions_outputs:
-    mikolajgasior/read-from-local-path@v1:
+    mikogs/read-from-local-path@v1:
       - ^matchme[0-9]+$
     aws-actions/amazon-ecr-login@v2:
       - ^docker_(username|password)_[0-9]+_dkr_ecr_[a-z1-6_]+_amazonaws_com$

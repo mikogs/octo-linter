@@ -31,7 +31,7 @@ to files containing a list of possible variable or secret names, with names bein
 space.  Check [Demo](demo.md) for a sample usage.
 
 ## Download
-If not compiled, binary can be download from [repository releases](https://github.com/mikolajgasior/octo-linter/releases).
+If not compiled, binary can be download from [repository releases](https://github.com/mikogs/octo-linter/releases).
 
 ## Using binary
 Tweak below command with a path pointing to `.github` and configuration file:
@@ -44,7 +44,7 @@ Tweak below command with a path pointing to `.github` and configuration file:
 ````
 docker run --rm --name octo-linter \
   -v /path/to/.github:/dot-github -v $(pwd):/config \
-  mikolajgasior/octo-linter:v3.1.0 \
+  mikogs/octo-linter:v3.1.0 \
   lint -p /dot-github -l WARN -c /config/config.yml -m
 ````
 

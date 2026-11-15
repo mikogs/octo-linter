@@ -13,3 +13,24 @@ The tool was developed during a large-scale refactor of existing GitHub Actions 
 ## Demo
 
 Please navigate to [Demo](demo.md) to see example usage.
+
+## Table of Contents
+
+### Getting Started
+- [Configuration](configuration.md)
+- [Building](building.md)
+- [Running locally](running-locally.md)
+- [GitHub Actions Workflow](github-actions-workflow.md)
+- [Demo](demo.md)
+
+### Rules
+- [Filenames](rules/filenames.md)
+- [Naming Conventions](rules/naming_conventions.md)
+- [Required Fields](rules/required_fields.md)
+- [Referenced Variables](rules/referenced_variables.md)
+- [Used Actions](rules/used_actions.md)
+- [Dependencies](rules/dependencies.md)
+- [Workflow Runners](rules/workflow_runners.md)
+
+### Development
+- [Adding a New Rule](add_rule.md)

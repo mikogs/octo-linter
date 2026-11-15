@@ -19,7 +19,7 @@ To get your development environment ready:
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/mikolajgasior/octo-linter.git
+   git clone https://github.com/mikogs/octo-linter.git
    cd octo-linter
    ```
 
@@ -34,14 +34,6 @@ To get your development environment ready:
    ```bash
    cd cmd/octo-linter
    go generate
-   ```
-
-4. *(Optional)* Set up the documentation tooling:
-
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install mkdocs-material
    ```
 
 ## Repository Layout
