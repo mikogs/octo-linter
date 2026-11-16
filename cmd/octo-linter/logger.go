@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
-	"os"
 	"slices"
 	"strings"
 )
@@ -13,6 +13,7 @@ type customHandler struct {
 	opts  *slog.HandlerOptions
 	attrs []slog.Attr
 	group string
+	w     io.Writer
 }
 
 func (h *customHandler) Enabled(_ context.Context, level slog.Level) bool {
@@ -22,20 +23,21 @@ func (h *customHandler) Enabled(_ context.Context, level slog.Level) bool {
 func (h *customHandler) Handle(_ context.Context, r slog.Record) error {
 	var buf strings.Builder
 
-	buf.WriteString(fmt.Sprintf("level=%s\n", r.Level.String()))
-	buf.WriteString(fmt.Sprintf("msg=%q\n", r.Message))
+	fmt.Fprintf(&buf, "level=%s\n", r.Level.String())
+	fmt.Fprintf(&buf, "msg=%q\n", r.Message)
 
 	for _, a := range h.attrs {
-		buf.WriteString(fmt.Sprintf("%s=%q\n", a.Key, a.Value.String()))
+		fmt.Fprintf(&buf, "%s=%q\n", a.Key, a.Value.String())
 	}
 
 	r.Attrs(func(a slog.Attr) bool {
-		buf.WriteString(fmt.Sprintf("%s=%q\n", a.Key, a.Value.String()))
+		fmt.Fprintf(&buf, "%s=%q\n", a.Key, a.Value.String())
 		return true
 	})
 	buf.WriteString("---\n")
 
-	_, _ = fmt.Fprint(os.Stderr, buf.String())
+	// Errors from writing to the log writer are ignored because we cannot log a logging failure.
+	_, _ = fmt.Fprint(h.w, buf.String())
 	return nil
 }
 

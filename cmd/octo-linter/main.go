@@ -474,7 +474,7 @@ func setLogger(loglevelFlag string, multiline bool) {
 
 	var logger *slog.Logger
 	if multiline {
-		logger = slog.New(&customHandler{opts: opts})
+		logger = slog.New(&customHandler{opts: opts, w: os.Stderr})
 	} else {
 		logger = slog.New(slog.NewTextHandler(os.Stderr, opts))
 	}
