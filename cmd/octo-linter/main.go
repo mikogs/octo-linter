@@ -30,6 +30,8 @@ const (
 	ExitErrGettingCfgFile        = 30
 	ExitErrReadingCfgFile        = 31
 	ExitErrReadingDefaultCfgFile = 32
+	ExitErrGettingLinter         = 33
+	ExitErrGettingDotGithub      = 34
 	ExitErrReadingVarsFile       = 41
 	ExitErrReadingSecretsFile    = 42
 	ExitErrCheckingDstPath       = 50
@@ -110,35 +112,74 @@ func createLintCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "lint",
 		Short: "Runs the linter on files from a specific directory",
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if _, err := os.Stat(path); os.IsNotExist(err) {
-				return fmt.Errorf("path '%s' does not exist or is not a directory", path)
-			}
-			if config != "" {
-				if _, err := os.Stat(config); os.IsNotExist(err) {
-					return fmt.Errorf("config file '%s' does not exist", config)
-				}
-			}
-			if varsFile != "" {
-				if _, err := os.Stat(varsFile); os.IsNotExist(err) {
-					return fmt.Errorf("vars-file '%s' does not exist", varsFile)
-				}
-			}
-			if secretsFile != "" {
-				if _, err := os.Stat(secretsFile); os.IsNotExist(err) {
-					return fmt.Errorf("secrets-file '%s' does not exist", secretsFile)
-				}
-			}
-			if output != "" {
-				fileInfo, err := os.Stat(output)
-				if os.IsNotExist(err) || !fileInfo.IsDir() {
-					return fmt.Errorf("output '%s' does not exist or is not a directory", output)
-				}
-			}
-			return nil
-		},
 		Run: func(cmd *cobra.Command, args []string) {
-			os.Exit(lintHandler(cmd.Context(), loglevel, logmultiline, path, config, varsFile, secretsFile, output, outputErrors))
+			setLogger(loglevel, logmultiline)
+
+			cleanPath := filepath.Clean(path)
+			cleanConfig := filepath.Clean(config)
+			cleanVarsFile := filepath.Clean(varsFile)
+			cleanSecretsFile := filepath.Clean(secretsFile)
+			cleanOutput := filepath.Clean(output)
+
+			if _, err := os.Stat(cleanPath); err != nil {
+				if os.IsNotExist(err) {
+					slog.Error("path does not exist", slog.String("path", path))
+					os.Exit(ExitErrReadingDotGithubDir)
+				}
+				slog.Error("error accessing path", slog.String("path", path), slog.String("err", err.Error()))
+				os.Exit(ExitErrReadingDotGithubDir)
+			}
+
+			if config != "" {
+				if _, err := os.Stat(cleanConfig); err != nil {
+					if os.IsNotExist(err) {
+						slog.Error("config file does not exist", slog.String("config", config))
+						os.Exit(ExitErrGettingCfgFile)
+					}
+					slog.Error("error accessing config", slog.String("config", config), slog.String("err", err.Error()))
+					os.Exit(ExitErrGettingCfgFile)
+				}
+			}
+
+			if varsFile != "" {
+				if _, err := os.Stat(cleanVarsFile); err != nil {
+					if os.IsNotExist(err) {
+						slog.Error("vars file does not exist", slog.String("vars_file", varsFile))
+						os.Exit(ExitErrReadingVarsFile)
+					}
+					slog.Error("error accessing vars file", slog.String("vars_file", varsFile), slog.String("err", err.Error()))
+					os.Exit(ExitErrReadingVarsFile)
+				}
+			}
+
+			if secretsFile != "" {
+				if _, err := os.Stat(cleanSecretsFile); err != nil {
+					if os.IsNotExist(err) {
+						slog.Error("secrets file does not exist", slog.String("secrets_file", secretsFile))
+						os.Exit(ExitErrReadingSecretsFile)
+					}
+					slog.Error("error accessing secrets file", slog.String("secrets_file", secretsFile), slog.String("err", err.Error()))
+					os.Exit(ExitErrReadingSecretsFile)
+				}
+			}
+
+			if output != "" {
+				fileInfo, err := os.Stat(cleanOutput)
+				if err != nil {
+					if os.IsNotExist(err) {
+						slog.Error("output path does not exist", slog.String("output", output))
+						os.Exit(ExitErrCheckingDstPath)
+					}
+					slog.Error("error accessing output file", slog.String("output", output), slog.String("err", err.Error()))
+					os.Exit(ExitErrCheckingDstPath)
+				}
+				if !fileInfo.IsDir() {
+					slog.Error("output is not a directory", slog.String("output", output))
+					os.Exit(ExitDstFileIsDir)
+				}
+			}
+
+			os.Exit(lintHandler(cmd.Context(), loglevel, logmultiline, cleanPath, cleanConfig, cleanVarsFile, cleanSecretsFile, cleanOutput, outputErrors))
 		},
 	}
 
@@ -161,7 +202,8 @@ func createInitCommand() *cobra.Command {
 		Use:   "init",
 		Short: "Create sample dotgithub.yml config file",
 		Run: func(cmd *cobra.Command, args []string) {
-			os.Exit(initHandler(cmd.Context(), destination))
+			cleanDestination := filepath.Clean(destination)
+			os.Exit(initHandler(cmd.Context(), cleanDestination))
 		},
 	}
 
@@ -177,7 +219,8 @@ func versionHandler(_ context.Context) int {
 
 func initHandler(_ context.Context, path string) int {
 	if path == "" {
-		fileInfo, err := os.Stat(configFileName)
+		cleanConfigFileName := filepath.Clean(configFileName)
+		fileInfo, err := os.Stat(cleanConfigFileName)
 		if err != nil && !os.IsNotExist(err) {
 			slog.Error(
 				"error checking if destination path exists",
@@ -188,14 +231,16 @@ func initHandler(_ context.Context, path string) int {
 			return ExitErrCheckingDstPath
 		}
 
-		if err == nil && fileInfo.IsDir() {
-			slog.Error(
-				"destination file already exists and it is a directory, remove it first or use --destination flag to change"+
-					" the destination",
-				slog.String("destination", configFileName),
-			)
-
-			return ExitDstFileIsDir
+		if err == nil {
+			if fileInfo.IsDir() {
+				slog.Error(
+					"destination file already exists and it is a directory, remove it first or use --destination flag to change"+
+						" the destination",
+					slog.String("destination", configFileName),
+				)
+				return ExitDstFileIsDir
+			}
+			slog.Warn("config file already exists, it will be overwritten")
 		}
 
 		path = configFileName
@@ -222,65 +267,57 @@ func initHandler(_ context.Context, path string) int {
 }
 
 func lintHandler(ctx context.Context, loglevel string, logmultiline bool, path, config, varsFile, secretsFile, output string, outputErrors int) int {
-	setLogger(loglevel, logmultiline)
-
 	lint, err := getLinter(config, path)
-	if err != nil && errors.Is(err, errCfgFileGet) {
-		return ExitErrGettingCfgFile
+	if err != nil {
+		return errorToExitCode(err)
 	}
 
-	if err != nil && errors.Is(err, errCfgFileRead) {
-		return ExitErrReadingCfgFile
-	}
-
-	if err != nil && errors.Is(err, errDefaultCfgFileRead) {
-		return ExitErrReadingDefaultCfgFile
-	}
-
-	dotGithub, err := getDotGithub(
-		ctx,
-		path,
-		varsFile,
-		secretsFile,
-		lint.Config.Overrides,
-	)
-	if err != nil && errors.Is(err, errDotGithubDirRead) {
-		return ExitErrReadingDotGithubDir
-	}
-
-	if err != nil && errors.Is(err, errDotGithubVarsFileRead) {
-		return ExitErrReadingVarsFile
-	}
-
-	if err != nil && errors.Is(err, errDotGithubSecretsFileRead) {
-		return ExitErrReadingSecretsFile
+	dotGithub, err := getDotGithub(ctx, path, varsFile, secretsFile, lint.Config.Overrides)
+	if err != nil {
+		return errorToExitCode(err)
 	}
 
 	outputLimit := 0
 	if outputErrors > 0 {
-		// the cli already validates flag
 		outputLimit = outputErrors
 	}
 
 	status, err := lint.Lint(dotGithub, output, outputLimit)
 	if err != nil {
-		slog.Error(
-			"error linting",
-			slog.String("err", err.Error()),
-		)
-
+		slog.Error("error linting", slog.String("err", err.Error()))
 		return ExitErrLinting
 	}
 
-	if status == linter.HasErrors {
+	switch status {
+	case linter.HasErrors:
 		return ExitLintErrors
-	}
-
-	if status == linter.HasOnlyWarnings {
+	case linter.HasOnlyWarnings:
 		return ExitLintOnlyWarnings
+	default:
+		return 0
 	}
+}
 
-	return 0
+func errorToExitCode(err error) int {
+	if errors.Is(err, errCfgFileGet) {
+		return ExitErrGettingCfgFile
+	}
+	if errors.Is(err, errCfgFileRead) {
+		return ExitErrReadingCfgFile
+	}
+	if errors.Is(err, errDefaultCfgFileRead) {
+		return ExitErrReadingDefaultCfgFile
+	}
+	if errors.Is(err, errDotGithubDirRead) {
+		return ExitErrReadingDotGithubDir
+	}
+	if errors.Is(err, errDotGithubVarsFileRead) {
+		return ExitErrReadingVarsFile
+	}
+	if errors.Is(err, errDotGithubSecretsFileRead) {
+		return ExitErrReadingSecretsFile
+	}
+	return ExitErrLinting
 }
 
 func getConfigFilePath(filePath string, dotGitHubPath string) (string, error) {
@@ -288,7 +325,7 @@ func getConfigFilePath(filePath string, dotGitHubPath string) (string, error) {
 		return filePath, nil
 	}
 
-	configInDotGithub := filepath.Join(dotGitHubPath, configFileName)
+	configInDotGithub := filepath.Clean(filepath.Join(dotGitHubPath, configFileName))
 	_, err := os.Stat(configInDotGithub)
 
 	notFound := os.IsNotExist(err)

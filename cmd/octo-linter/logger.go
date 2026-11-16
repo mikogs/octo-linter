@@ -24,6 +24,11 @@ func (h *customHandler) Handle(_ context.Context, r slog.Record) error {
 
 	buf.WriteString(fmt.Sprintf("level=%s\n", r.Level.String()))
 	buf.WriteString(fmt.Sprintf("msg=%q\n", r.Message))
+
+	for _, a := range h.attrs {
+		buf.WriteString(fmt.Sprintf("%s=%q\n", a.Key, a.Value.String()))
+	}
+
 	r.Attrs(func(a slog.Attr) bool {
 		buf.WriteString(fmt.Sprintf("%s=%q\n", a.Key, a.Value.String()))
 		return true
