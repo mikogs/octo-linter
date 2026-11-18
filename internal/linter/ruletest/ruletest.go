@@ -72,16 +72,24 @@ func Lint(
 	chErrors := make(chan glitch.Glitch)
 
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				close(chErrors)
+				chResult <- lintResult{compliant: false, err: fmt.Errorf("rule panicked: %v", r)}
+			}
+		}()
+
 		compliant, err := rule.Lint(conf, file, dotGithub, chErrors)
 		close(chErrors)
 		chResult <- lintResult{compliant: compliant, err: err}
 	}()
 
-	timer := time.After(time.Duration(timeout) * time.Second)
+	timer := time.NewTimer(time.Duration(timeout) * time.Second)
+	defer timer.Stop()
 
 	for {
 		select {
-		case <-timer:
+		case <-timer.C:
 			return false, ruleErrors, errTimeout
 		case glitchInstance, more := <-chErrors:
 			if more {
@@ -101,14 +109,13 @@ func Action(
 	actionToTest string,
 	testFunc func(file dotgithub.File, name string),
 ) {
-	for actionName, actionFile := range dotGithub.Actions {
-		if actionName != actionToTest {
-			continue
-		}
-
-		log.Printf("running test on action %s...", actionName)
-		testFunc(actionFile, actionName)
+	actionFile, ok := dotGithub.Actions[actionToTest]
+	if !ok {
+		return
 	}
+
+	log.Printf("running test on action %s...", actionToTest)
+	testFunc(actionFile, actionToTest)
 }
 
 // Workflow runs a test function on a specific workflow from DotGithub.
@@ -117,12 +124,11 @@ func Workflow(
 	workflowToTest string,
 	testFunc func(file dotgithub.File, name string),
 ) {
-	for workflowName, workflowFile := range dotGithub.Workflows {
-		if workflowName != workflowToTest {
-			continue
-		}
-
-		log.Printf("running test on workflow %s...", workflowName)
-		testFunc(workflowFile, workflowName)
+	workflowFile, ok := dotGithub.Workflows[workflowToTest]
+	if !ok {
+		return
 	}
+
+	log.Printf("running test on workflow %s...", workflowToTest)
+	testFunc(workflowFile, workflowToTest)
 }

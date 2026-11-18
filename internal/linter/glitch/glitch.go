@@ -31,6 +31,9 @@ func ListToMarkdown(glitches []*Glitch, limit int) string {
 `)
 
 	for i, glitch := range glitches {
+		if glitch == nil {
+			continue
+		}
 		if limit > 0 && i == limit {
 			break
 		}
