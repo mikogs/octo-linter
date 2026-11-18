@@ -79,7 +79,6 @@ func Lint(
 
 	timer := time.After(time.Duration(timeout) * time.Second)
 
-loop:
 	for {
 		select {
 		case <-timer:

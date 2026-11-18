@@ -3,6 +3,7 @@ package glitch
 
 import (
 	"fmt"
+	"strings"
 )
 
 const (
@@ -24,31 +25,38 @@ type Glitch struct {
 
 // ListToMarkdown takes a list of Glitch instances and generates a Markdown table from it.
 func ListToMarkdown(glitches []*Glitch, limit int) string {
-	markdown := `|Item|Error|
+	var sb strings.Builder
+	sb.WriteString(`|Item|Error|
 |---|---|
-`
+`)
 
 	for i, glitch := range glitches {
 		if limit > 0 && i == limit {
 			break
 		}
 
-		name := "a/" + glitch.Name
+		namePrefix := "a/"
 		if glitch.Type == DotGithubFileTypeWorkflow {
-			name = "w/" + glitch.Name
+			namePrefix = "w/"
 		}
+
+		name := glitch.Name
+		if name == "" {
+			name = "unknown"
+		}
+		name = namePrefix + name
 
 		level := `🟠`
 		if glitch.IsError {
 			level = `🔴`
 		}
 
-		markdown += fmt.Sprintf("|%s|%s %s *(%s)*|\n", name, level, glitch.ErrText, glitch.RuleName)
+		fmt.Fprintf(&sb, "|%s|%s %s *(%s)*|\n", name, level, glitch.ErrText, glitch.RuleName)
 	}
 
 	if len(glitches) > limit && limit > 0 {
-		markdown += fmt.Sprintf("\n...and many more (%d in total).", len(glitches))
+		fmt.Fprintf(&sb, "\n...and many more (%d in total).", len(glitches))
 	}
 
-	return markdown
+	return sb.String()
 }
