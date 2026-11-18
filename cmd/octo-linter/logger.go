@@ -27,7 +27,11 @@ func (h *customHandler) Handle(_ context.Context, r slog.Record) error {
 	fmt.Fprintf(&buf, "msg=%q\n", r.Message)
 
 	for _, a := range h.attrs {
-		fmt.Fprintf(&buf, "%s=%q\n", a.Key, a.Value.String())
+		key := a.Key
+		if h.group != "" {
+			key = h.group + "." + a.Key
+		}
+		fmt.Fprintf(&buf, "%s=%q\n", key, a.Value.String())
 	}
 
 	r.Attrs(func(a slog.Attr) bool {

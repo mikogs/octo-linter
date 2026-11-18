@@ -114,6 +114,7 @@ func createLintCommand() *cobra.Command {
 		Short: "Runs the linter on files from a specific directory",
 		Run: func(cmd *cobra.Command, args []string) {
 			setLogger(loglevel, logmultiline)
+			ctx := cmd.Context()
 
 			cleanPath := filepath.Clean(path)
 			cleanConfig := filepath.Clean(config)
@@ -133,10 +134,10 @@ func createLintCommand() *cobra.Command {
 			if config != "" {
 				if _, err := os.Stat(cleanConfig); err != nil {
 					if os.IsNotExist(err) {
-						slog.Error("config file does not exist", slog.String("config", config))
+						slog.ErrorContext(ctx, "config file does not exist", slog.String("config", config))
 						os.Exit(ExitErrGettingCfgFile)
 					}
-					slog.Error("error accessing config", slog.String("config", config), slog.String("err", err.Error()))
+					slog.ErrorContext(ctx, "error accessing config", slog.String("config", config), slog.String("err", err.Error()))
 					os.Exit(ExitErrGettingCfgFile)
 				}
 			}
@@ -144,10 +145,10 @@ func createLintCommand() *cobra.Command {
 			if varsFile != "" {
 				if _, err := os.Stat(cleanVarsFile); err != nil {
 					if os.IsNotExist(err) {
-						slog.Error("vars file does not exist", slog.String("vars_file", varsFile))
+						slog.ErrorContext(ctx, "vars file does not exist", slog.String("vars_file", varsFile))
 						os.Exit(ExitErrReadingVarsFile)
 					}
-					slog.Error("error accessing vars file", slog.String("vars_file", varsFile), slog.String("err", err.Error()))
+					slog.ErrorContext(ctx, "error accessing vars file", slog.String("vars_file", varsFile), slog.String("err", err.Error()))
 					os.Exit(ExitErrReadingVarsFile)
 				}
 			}
@@ -155,10 +156,10 @@ func createLintCommand() *cobra.Command {
 			if secretsFile != "" {
 				if _, err := os.Stat(cleanSecretsFile); err != nil {
 					if os.IsNotExist(err) {
-						slog.Error("secrets file does not exist", slog.String("secrets_file", secretsFile))
+						slog.ErrorContext(ctx, "secrets file does not exist", slog.String("secrets_file", secretsFile))
 						os.Exit(ExitErrReadingSecretsFile)
 					}
-					slog.Error("error accessing secrets file", slog.String("secrets_file", secretsFile), slog.String("err", err.Error()))
+					slog.ErrorContext(ctx, "error accessing secrets file", slog.String("secrets_file", secretsFile), slog.String("err", err.Error()))
 					os.Exit(ExitErrReadingSecretsFile)
 				}
 			}
@@ -167,10 +168,10 @@ func createLintCommand() *cobra.Command {
 				fileInfo, err := os.Stat(cleanOutput)
 				if err != nil {
 					if os.IsNotExist(err) {
-						slog.Error("output path does not exist", slog.String("output", output))
+						slog.ErrorContext(ctx, "output path does not exist", slog.String("output", output))
 						os.Exit(ExitErrCheckingDstPath)
 					}
-					slog.Error("error accessing output file", slog.String("output", output), slog.String("err", err.Error()))
+					slog.ErrorContext(ctx, "error accessing output file", slog.String("output", output), slog.String("err", err.Error()))
 					os.Exit(ExitErrCheckingDstPath)
 				}
 				if !fileInfo.IsDir() {
@@ -217,12 +218,13 @@ func versionHandler(_ context.Context) int {
 	return ExitOK
 }
 
-func initHandler(_ context.Context, path string) int {
+func initHandler(ctx context.Context, path string) int {
 	if path == "" {
 		cleanConfigFileName := filepath.Clean(configFileName)
 		fileInfo, err := os.Stat(cleanConfigFileName)
 		if err != nil && !os.IsNotExist(err) {
-			slog.Error(
+			slog.ErrorContext(
+				ctx,
 				"error checking if destination path exists",
 				slog.String("destination", configFileName),
 				slog.String("err", err.Error()),
@@ -233,14 +235,15 @@ func initHandler(_ context.Context, path string) int {
 
 		if err == nil {
 			if fileInfo.IsDir() {
-				slog.Error(
+				slog.ErrorContext(
+					ctx,
 					"destination file already exists and it is a directory, remove it first or use --destination flag to change"+
 						" the destination",
 					slog.String("destination", configFileName),
 				)
 				return ExitDstFileIsDir
 			}
-			slog.Warn("config file already exists, it will be overwritten")
+			slog.WarnContext(ctx, "config file already exists, it will be overwritten")
 		}
 
 		path = configFileName
@@ -248,7 +251,8 @@ func initHandler(_ context.Context, path string) int {
 
 	err := os.WriteFile(path, linter.GetDefaultConfig(), FileModeDefaultConfig)
 	if err != nil {
-		slog.Error(
+		slog.ErrorContext(
+			ctx,
 			"error writing default config",
 			slog.String("path", path),
 			slog.String("err", err.Error()),
@@ -257,7 +261,8 @@ func initHandler(_ context.Context, path string) int {
 		return ExitErrWritingCfg
 	}
 
-	slog.Info(
+	slog.InfoContext(
+		ctx,
 		"Sample configuration file has been created. Run 'lint' command with '-c' flag or put the file in the .github"+
 			" directory.",
 		slog.String("path", path),
@@ -284,7 +289,7 @@ func lintHandler(ctx context.Context, loglevel string, logmultiline bool, path, 
 
 	status, err := lint.Lint(dotGithub, output, outputLimit)
 	if err != nil {
-		slog.Error("error linting", slog.String("err", err.Error()))
+		slog.ErrorContext(ctx, "error linting", slog.String("err", err.Error()))
 		return ExitErrLinting
 	}
 
@@ -421,7 +426,8 @@ func getDotGithub(
 
 	err := dotGithub.ReadDir(ctx, dotGithubPath, overridePaths, overrideOutputs)
 	if err != nil {
-		slog.Error(
+		slog.ErrorContext(
+			ctx,
 			"error initializing",
 			slog.String("path", dotGithubPath),
 			slog.String("err", err.Error()),
@@ -433,7 +439,8 @@ func getDotGithub(
 	if varsFile != "" {
 		err = dotGithub.ReadVars(varsFile)
 		if err != nil {
-			slog.Error(
+			slog.ErrorContext(
+				ctx,
 				"error reading vars file",
 				slog.String("path", varsFile),
 				slog.String("err", err.Error()),
@@ -446,7 +453,8 @@ func getDotGithub(
 	if secretsFile != "" {
 		err = dotGithub.ReadSecrets(secretsFile)
 		if err != nil {
-			slog.Error(
+			slog.ErrorContext(
+				ctx,
 				"error reading secrets file",
 				slog.String("path", secretsFile),
 				slog.String("err", err.Error()),
