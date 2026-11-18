@@ -31,7 +31,7 @@ func GetDotGithub() *dotgithub.DotGithub {
 		logger := slog.New(slog.DiscardHandler)
 		slog.SetDefault(logger)
 
-		_ = testDotGithub.ReadDir(
+		if err := testDotGithub.ReadDir(
 			context.Background(),
 			"../../../../tests/rules",
 			map[string]string{
@@ -45,7 +45,9 @@ func GetDotGithub() *dotgithub.DotGithub {
 					regexp.MustCompile(`^docker_(username|password)_[0-9]+_dkr_ecr_[a-z1-6_]+_amazonaws_com$`),
 				},
 			},
-		)
+		); err != nil {
+			panic(fmt.Sprintf("failed to load test data: %v", err))
+		}
 	})
 
 	return testDotGithub
@@ -60,39 +62,38 @@ func Lint(
 	file dotgithub.File,
 	dotGithub *dotgithub.DotGithub,
 ) (bool, []string, error) {
-	compliant := true
 	ruleErrors := []string{}
 
-	var err error
-
-	timer := time.After(time.Duration(timeout) * time.Second)
-
+	type lintResult struct {
+		compliant bool
+		err       error
+	}
+	chResult := make(chan lintResult, 1)
 	chErrors := make(chan glitch.Glitch)
 
 	go func() {
-		compliant, err = rule.Lint(conf, file, dotGithub, chErrors)
+		compliant, err := rule.Lint(conf, file, dotGithub, chErrors)
 		close(chErrors)
+		chResult <- lintResult{compliant: compliant, err: err}
 	}()
+
+	timer := time.After(time.Duration(timeout) * time.Second)
 
 loop:
 	for {
 		select {
 		case <-timer:
-			err = errTimeout
-			compliant = false
-
-			break loop
+			return false, ruleErrors, errTimeout
 		case glitchInstance, more := <-chErrors:
 			if more {
 				ruleError := fmt.Sprintf("%s %s: %s", glitchInstance.Path, glitchInstance.RuleName, glitchInstance.ErrText)
 				ruleErrors = append(ruleErrors, ruleError)
 			} else {
-				break loop
+				res := <-chResult
+				return res.compliant, ruleErrors, res.err
 			}
 		}
 	}
-
-	return compliant, ruleErrors, err
 }
 
 // Action runs a test function on a specific action in DotGithub.
