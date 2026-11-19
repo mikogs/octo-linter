@@ -52,6 +52,10 @@ var (
 	)
 )
 
+var (
+	httpClient = &http.Client{Timeout: ExternalActionHTTPTimeout}
+)
+
 func errCreatingHTTPRequestForAction(err error) error {
 	return fmt.Errorf("%w: %s", errActionHTTPRequestCreate, err.Error())
 }
@@ -69,6 +73,7 @@ func (d *DotGithub) ReadDir(
 ) error {
 	d.Actions = make(map[string]*action.Action)
 	d.Workflows = make(map[string]*workflow.Workflow)
+	d.ExternalActions = make(map[string]*action.Action)
 
 	err := d.getActionsFromDir(path, overridePaths, overrideOutputs)
 	if err != nil {
@@ -152,24 +157,23 @@ func (d *DotGithub) GetAction(name string) *action.Action {
 
 // GetExternalAction returns an Action that is defined outside the current repository, by name.
 func (d *DotGithub) GetExternalAction(name string) *action.Action {
-	if d.ExternalActions == nil {
-		d.ExternalActions = map[string]*action.Action{}
-	}
 	return d.ExternalActions[name]
 }
 
 // DownloadExternalAction downloads a GitHub Action from its “uses” path (e.g., "actions/checkout@v4").
 func (d *DotGithub) DownloadExternalAction(ctx context.Context, path string, overrideOutputs map[string][]*regexp.Regexp) error {
-	if d.ExternalActions == nil {
-		d.ExternalActions = map[string]*action.Action{}
-	}
-
 	if d.ExternalActions[path] != nil {
 		return nil
 	}
 
 	repoVersion := strings.Split(path, "@")
+	if len(repoVersion) < 2 {
+		return fmt.Errorf("invalid external action path format: %s", path)
+	}
 	ownerRepoDir := strings.SplitN(repoVersion[0], "/", NumExternalActionPathParts)
+	if len(ownerRepoDir) < 2 {
+		return fmt.Errorf("invalid owner/repo format in path: %s", path)
+	}
 
 	directory := ""
 	if len(ownerRepoDir) > NumExternalActionPathPartsNoSubdir {
@@ -223,12 +227,12 @@ func (d *DotGithub) DownloadExternalAction(ctx context.Context, path string, ove
 		}
 	}
 
-	d.ExternalActions[path] = actionInstance
-
-	err = d.ExternalActions[path].Unmarshal(true)
+	err = actionInstance.Unmarshal(true)
 	if err != nil {
 		return fmt.Errorf("error unmarshaling external action: %w", err)
 	}
+
+	d.ExternalActions[path] = actionInstance
 
 	return nil
 }
@@ -378,6 +382,10 @@ func (d *DotGithub) processActions(ctx context.Context, overrideOutputs map[stri
 		}
 
 		for stepIdx, step := range action.Runs.Steps {
+			if step == nil {
+				continue
+			}
+
 			if !regexpExternalAction.MatchString(step.Uses) {
 				continue
 			}
@@ -415,6 +423,10 @@ func (d *DotGithub) processWorkflows(ctx context.Context, overrideOutputs map[st
 		}
 
 		for _, job := range workflow.Jobs {
+			if job == nil {
+				continue
+			}
+
 			if len(job.Steps) == 0 {
 				continue
 			}
@@ -460,8 +472,6 @@ func (d *DotGithub) getActionHTTPResponse(
 	if err != nil {
 		return nil, errCreatingHTTPRequestForAction(err)
 	}
-
-	httpClient := &http.Client{Timeout: ExternalActionHTTPTimeout}
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
@@ -511,28 +521,28 @@ func getActionYAMLFromPath(path string) (string, error) {
 	}
 
 	// search for action.yml or action.yaml file
-	ymlAction := filepath.Join(path, "action.yml")
-	_, err = os.Stat(ymlAction)
+	pathYML := filepath.Join(path, "action.yml")
+	_, err = os.Stat(pathYML)
 
 	ymlNotFound := os.IsNotExist(err)
 	if err != nil && !ymlNotFound {
-		return "", fmt.Errorf("error getting os.Stat on %s: %w", ymlAction, err)
+		return "", fmt.Errorf("error getting os.Stat on %s: %w", pathYML, err)
 	}
 
 	if !ymlNotFound {
-		return ymlAction, nil
+		return pathYML, nil
 	}
 
-	yamlAction := filepath.Join(path, "action.yaml")
-	_, err = os.Stat(yamlAction)
+	pathYAML := filepath.Join(path, "action.yaml")
+	_, err = os.Stat(pathYAML)
 
 	yamlNotFound := os.IsNotExist(err)
 	if err != nil && !yamlNotFound {
-		return "", fmt.Errorf("error getting os.Stat on %s: %w", yamlAction, err)
+		return "", fmt.Errorf("error getting os.Stat on %s: %w", pathYAML, err)
 	}
 
 	if !yamlNotFound {
-		return yamlAction, nil
+		return pathYAML, nil
 	}
 
 	return "", nil
