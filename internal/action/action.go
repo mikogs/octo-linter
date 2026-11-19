@@ -31,15 +31,15 @@ type Action struct {
 // Unmarshal parses YAML from a file in struct's Path or from struct's Raw field.
 func (a *Action) Unmarshal(fromRaw bool) error {
 	if !fromRaw {
-		slog.Debug(
-			"reading action file",
-			slog.String("path", a.Path),
-		)
-
 		b, err := os.ReadFile(a.Path)
 		if err != nil {
 			return fmt.Errorf("cannot read file %s: %w", a.Path, err)
 		}
+
+		slog.Debug(
+			"reading action file",
+			slog.String("path", a.Path),
+		)
 
 		a.Raw = b
 	}
