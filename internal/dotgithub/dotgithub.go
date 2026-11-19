@@ -332,6 +332,10 @@ func (d *DotGithub) getWorkflowsFromDir(path string) error {
 		return fmt.Errorf("error reading workflows directory %s: %w", dirWorkflows, err)
 	}
 
+	if len(entries) == 0 {
+		return nil
+	}
+
 	for _, entry := range entries {
 		m := filenameRegex.MatchString(entry.Name())
 		if !m {
@@ -358,6 +362,10 @@ func (d *DotGithub) getWorkflowsFromDir(path string) error {
 }
 
 func (d *DotGithub) processActions(ctx context.Context, overrideOutputs map[string][]*regexp.Regexp) error {
+	if len(d.Actions) == 0 {
+		return nil
+	}
+
 	// download all external actions used in actions' steps
 	for _, action := range d.Actions {
 		err := action.Unmarshal(false)
@@ -391,6 +399,10 @@ func (d *DotGithub) processActions(ctx context.Context, overrideOutputs map[stri
 }
 
 func (d *DotGithub) processWorkflows(ctx context.Context, overrideOutputs map[string][]*regexp.Regexp) error {
+	if len(d.Workflows) == 0 {
+		return nil
+	}
+
 	// download all external actions used in actions' steps
 	for _, workflow := range d.Workflows {
 		err := workflow.Unmarshal(false)

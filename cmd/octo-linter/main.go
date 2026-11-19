@@ -117,11 +117,6 @@ func createLintCommand() *cobra.Command {
 			ctx := cmd.Context()
 
 			cleanPath := filepath.Clean(path)
-			cleanConfig := filepath.Clean(config)
-			cleanVarsFile := filepath.Clean(varsFile)
-			cleanSecretsFile := filepath.Clean(secretsFile)
-			cleanOutput := filepath.Clean(output)
-
 			if _, err := os.Stat(cleanPath); err != nil {
 				if os.IsNotExist(err) {
 					slog.Error("path does not exist", slog.String("path", path))
@@ -132,7 +127,8 @@ func createLintCommand() *cobra.Command {
 			}
 
 			if config != "" {
-				if _, err := os.Stat(cleanConfig); err != nil {
+				config = filepath.Clean(config)
+				if _, err := os.Stat(config); err != nil {
 					if os.IsNotExist(err) {
 						slog.ErrorContext(ctx, "config file does not exist", slog.String("config", config))
 						os.Exit(ExitErrGettingCfgFile)
@@ -143,7 +139,8 @@ func createLintCommand() *cobra.Command {
 			}
 
 			if varsFile != "" {
-				if _, err := os.Stat(cleanVarsFile); err != nil {
+				varsFile = filepath.Clean(varsFile)
+				if _, err := os.Stat(varsFile); err != nil {
 					if os.IsNotExist(err) {
 						slog.ErrorContext(ctx, "vars file does not exist", slog.String("vars_file", varsFile))
 						os.Exit(ExitErrReadingVarsFile)
@@ -154,7 +151,8 @@ func createLintCommand() *cobra.Command {
 			}
 
 			if secretsFile != "" {
-				if _, err := os.Stat(cleanSecretsFile); err != nil {
+				secretsFile = filepath.Clean(secretsFile)
+				if _, err := os.Stat(secretsFile); err != nil {
 					if os.IsNotExist(err) {
 						slog.ErrorContext(ctx, "secrets file does not exist", slog.String("secrets_file", secretsFile))
 						os.Exit(ExitErrReadingSecretsFile)
@@ -165,7 +163,8 @@ func createLintCommand() *cobra.Command {
 			}
 
 			if output != "" {
-				fileInfo, err := os.Stat(cleanOutput)
+				output = filepath.Clean(output)
+				fileInfo, err := os.Stat(output)
 				if err != nil {
 					if os.IsNotExist(err) {
 						slog.ErrorContext(ctx, "output path does not exist", slog.String("output", output))
@@ -180,7 +179,7 @@ func createLintCommand() *cobra.Command {
 				}
 			}
 
-			os.Exit(lintHandler(cmd.Context(), loglevel, logmultiline, cleanPath, cleanConfig, cleanVarsFile, cleanSecretsFile, cleanOutput, outputErrors))
+			os.Exit(lintHandler(cmd.Context(), loglevel, logmultiline, cleanPath, config, varsFile, secretsFile, output, outputErrors))
 		},
 	}
 
