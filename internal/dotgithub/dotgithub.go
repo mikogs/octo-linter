@@ -315,6 +315,10 @@ func (d *DotGithub) getActionsFromDir(path string, overridePaths map[string]stri
 		}
 
 		d.ExternalActions[actionPath] = actionInstance
+
+		if err := actionInstance.Unmarshal(false); err != nil {
+			return fmt.Errorf("error unmarshaling overridden action %s: %w", actionPath, err)
+		}
 	}
 
 	return nil
@@ -354,19 +358,6 @@ func (d *DotGithub) getWorkflowsFromDir(path string) error {
 }
 
 func (d *DotGithub) processActions(ctx context.Context, overrideOutputs map[string][]*regexp.Regexp) error {
-	// get contents from already existing external actions that are overridden by local actions
-	var err error
-	for path := range d.ExternalActions {
-		err = d.ExternalActions[path].Unmarshal(false)
-		if err != nil {
-			return fmt.Errorf(
-				"error unmarshaling external action overridden by a local file %s: %w",
-				path,
-				err,
-			)
-		}
-	}
-
 	// download all external actions used in actions' steps
 	for _, action := range d.Actions {
 		err := action.Unmarshal(false)
@@ -466,6 +457,7 @@ func (d *DotGithub) getActionHTTPResponse(
 	}
 
 	if resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
 		urlYAML := urlPrefix + "/action.yaml"
 		slog.Debug(
 			"downloading external action yaml",
