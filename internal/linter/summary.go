@@ -19,10 +19,12 @@ type summary struct {
 
 func newSummary() *summary {
 	return &summary{
+		mu:           sync.Mutex{},
 		numError:     atomic.Int32{},
 		numWarning:   atomic.Int32{},
 		numJob:       atomic.Int32{},
 		numProcessed: atomic.Int32{},
+		glitches:     make([]*glitch.Glitch, 0),
 	}
 }
 

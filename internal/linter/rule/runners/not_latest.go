@@ -25,7 +25,7 @@ func (r NotLatest) FileType() int {
 }
 
 // Validate checks whether the given value is valid for this rule's configuration.
-func (r NotLatest) Validate(conf interface{}) error {
+func (r NotLatest) Validate(conf any) error {
 	_, ok := conf.(bool)
 	if !ok {
 		return errValueNotBool
@@ -37,7 +37,7 @@ func (r NotLatest) Validate(conf interface{}) error {
 // Lint runs a rule with the specified configuration on a dotgithub.File (action or workflow),
 // reports any errors via the given channel, and returns whether the file is compliant.
 func (r NotLatest) Lint(
-	conf interface{},
+	conf any,
 	file dotgithub.File,
 	_ *dotgithub.DotGithub,
 	chErrors chan<- glitch.Glitch,
@@ -77,7 +77,7 @@ func (r NotLatest) Lint(
 }
 
 func (r NotLatest) processRunsOn(
-	jobRunsOn interface{},
+	jobRunsOn any,
 	jobName string,
 	workflowInstance *workflow.Workflow,
 	chErrors chan<- glitch.Glitch,
@@ -95,11 +95,12 @@ func (r NotLatest) processRunsOn(
 				Type:     rule.DotGithubFileTypeWorkflow,
 				ErrText:  fmt.Sprintf("job '%s' should not use 'latest' in 'runs-on' field", jobName),
 				RuleName: r.ConfigName(0),
+				IsError:  false,
 			}
 		}
 	}
 
-	runsOnList, runsOnIsList := jobRunsOn.([]interface{})
+	runsOnList, runsOnIsList := jobRunsOn.([]any)
 	if runsOnIsList {
 		for _, runsOn := range runsOnList {
 			runsOnStr, ok2 := runsOn.(string)
@@ -112,6 +113,7 @@ func (r NotLatest) processRunsOn(
 					Type:     rule.DotGithubFileTypeWorkflow,
 					ErrText:  fmt.Sprintf("job '%s' should not use 'latest' in 'runs-on' field", jobName),
 					RuleName: r.ConfigName(0),
+					IsError:  false,
 				}
 			}
 		}

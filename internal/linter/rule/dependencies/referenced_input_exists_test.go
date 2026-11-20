@@ -11,7 +11,9 @@ import (
 func TestReferencedInputExistsValidate(t *testing.T) {
 	t.Parallel()
 
-	rule := ReferencedInputExists{}
+	rule := ReferencedInputExists{
+		FileTypeRequired: "",
+	}
 
 	confBad := 4
 

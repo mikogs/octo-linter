@@ -25,7 +25,7 @@ func (r WorkflowFilenameBaseFormat) FileType() int {
 }
 
 // Validate checks whether the given value is valid for this rule's configuration.
-func (r WorkflowFilenameBaseFormat) Validate(conf interface{}) error {
+func (r WorkflowFilenameBaseFormat) Validate(conf any) error {
 	val, ok := conf.(string)
 	if !ok {
 		return errValueNotString
@@ -43,7 +43,7 @@ func (r WorkflowFilenameBaseFormat) Validate(conf interface{}) error {
 // Lint runs a rule with the specified configuration on a dotgithub.File (action or workflow),
 // reports any errors via the given channel, and returns whether the file is compliant.
 func (r WorkflowFilenameBaseFormat) Lint(
-	conf interface{},
+	conf any,
 	file dotgithub.File,
 	_ *dotgithub.DotGithub,
 	chErrors chan<- glitch.Glitch,
@@ -73,6 +73,7 @@ func (r WorkflowFilenameBaseFormat) Lint(
 			Type:     rule.DotGithubFileTypeWorkflow,
 			ErrText:  "filename base must be " + confValue,
 			RuleName: r.ConfigName(0),
+			IsError:  false,
 		}
 
 		return false, nil

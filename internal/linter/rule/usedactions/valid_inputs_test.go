@@ -11,7 +11,9 @@ import (
 func TestValidInputsValidate(t *testing.T) {
 	t.Parallel()
 
-	rule := ValidInputs{}
+	rule := ValidInputs{
+		FileTypeRequired: "",
+	}
 
 	confBad := 4
 

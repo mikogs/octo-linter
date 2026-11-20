@@ -5,29 +5,29 @@ linters:
     - cyclop
     - tagliatelle
     - testpackage
-    - exhaustruct
+    - exhaustruct_v5
+    - depguard
+    - err113
+    - gosec
+    - goconst
+    - funlen
+    - gocognit
+    - varnamelen
+    - mnd
+    - noinlineerr
+    - wrapcheck
+    - gomodguard
   settings:
-    funlen:
-      lines: 70
-    depguard:
-      rules:
-        main:
-          allow:
-            - $gostd
-            - gopkg.in/yaml.v2
+    wsl_v5:
+      allow-first-in-block: true
+      allow-whole-block: false
+      branch-max-lines: 2
   exclusions:
     generated: disable
     rules:
       - linters:
-          - err113
-          - exhaustruct
-          - funlen
-          - varnamelen
           - dupl
         path: _test.go
-      - linters:
-          - funlen
-        path: gen.go
       - linters:
           - dupl
         path: internal/linter/rule/refvars

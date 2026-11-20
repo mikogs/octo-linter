@@ -2,11 +2,13 @@ package linter
 
 import "path/filepath"
 
+// Paths contains paths to exclude and include.
 type Paths struct {
 	NoChecking []string `yaml:"no_checking,omitempty"`
 	Checking   []string `yaml:"checking,omitempty"`
 }
 
+// Check checks if a specified path should be included for linting.
 func (p *Paths) Check(path string) bool {
 	if p == nil {
 		return true
@@ -22,6 +24,7 @@ func (p *Paths) Check(path string) bool {
 						return true
 					}
 				}
+
 				return false
 			}
 		}
@@ -34,6 +37,7 @@ func (p *Paths) Check(path string) bool {
 				return true
 			}
 		}
+
 		return false
 	}
 

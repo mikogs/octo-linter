@@ -8,10 +8,10 @@ import (
 type Job struct {
 	Name   string            `yaml:"name"`
 	Uses   string            `yaml:"uses"`
-	RunsOn interface{}       `yaml:"runs-on"`
+	RunsOn any               `yaml:"runs-on"`
 	Steps  []*step.Step      `yaml:"steps"`
 	Env    map[string]string `yaml:"env"`
-	Needs  interface{}       `yaml:"needs,omitempty"`
+	Needs  any               `yaml:"needs,omitempty"`
 }
 
 // SetParentType sets parent type for all the steps.
@@ -20,6 +20,7 @@ func (wj *Job) SetParentType(t string) {
 		if s == nil {
 			continue
 		}
+
 		s.ParentType = t
 	}
 }

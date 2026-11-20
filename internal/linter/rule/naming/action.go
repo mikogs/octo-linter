@@ -49,7 +49,7 @@ func (r Action) FileType() int {
 }
 
 // Validate checks whether the given value is valid for this rule's configuration.
-func (r Action) Validate(conf interface{}) error {
+func (r Action) Validate(conf any) error {
 	val, ok := conf.(string)
 	if !ok {
 		return errValueNotString
@@ -67,7 +67,7 @@ func (r Action) Validate(conf interface{}) error {
 //
 //nolint:gocognit,funlen
 func (r Action) Lint(
-	conf interface{},
+	conf any,
 	file dotgithub.File,
 	_ *dotgithub.DotGithub,
 	chErrors chan<- glitch.Glitch,
@@ -99,6 +99,7 @@ func (r Action) Lint(
 					Type:     rule.DotGithubFileTypeAction,
 					ErrText:  fmt.Sprintf("input '%s' must be %s", inputName, confValue),
 					RuleName: r.ConfigName(0),
+					IsError:  false,
 				}
 
 				compliant = false
@@ -114,6 +115,7 @@ func (r Action) Lint(
 					Type:     rule.DotGithubFileTypeAction,
 					ErrText:  fmt.Sprintf("output '%s' must be %s", outputName, confValue),
 					RuleName: r.ConfigName(0),
+					IsError:  false,
 				}
 
 				compliant = false
@@ -137,6 +139,7 @@ func (r Action) Lint(
 						Type:     rule.DotGithubFileTypeAction,
 						ErrText:  fmt.Sprintf("references a variable '%s' that must be %s", string(refVar[1]), confValue),
 						RuleName: r.ConfigName(0),
+						IsError:  false,
 					}
 
 					compliant = false
@@ -162,6 +165,7 @@ func (r Action) Lint(
 						Type:     rule.DotGithubFileTypeAction,
 						ErrText:  fmt.Sprintf("step %d env '%s' must be %s", stepIdx, envName, confValue),
 						RuleName: r.ConfigName(0),
+						IsError:  false,
 					}
 
 					compliant = false

@@ -44,8 +44,8 @@ func (r Workflow) FileType() int {
 }
 
 // Validate checks whether the given value is valid for this rule's configuration.
-func (r Workflow) Validate(conf interface{}) error {
-	vals, ok := conf.([]interface{})
+func (r Workflow) Validate(conf any) error {
+	vals, ok := conf.([]any)
 	if !ok {
 		return errValueNotStringArray
 	}
@@ -76,7 +76,7 @@ func (r Workflow) Validate(conf interface{}) error {
 //
 //nolint:gocognit,funlen
 func (r Workflow) Lint(
-	conf interface{},
+	conf any,
 	file dotgithub.File,
 	_ *dotgithub.DotGithub,
 	chErrors chan<- glitch.Glitch,
@@ -97,7 +97,7 @@ func (r Workflow) Lint(
 
 	compliant := true
 
-	confInterfaces, ok := conf.([]interface{})
+	confInterfaces, ok := conf.([]any)
 	if !ok {
 		return false, errValueNotStringArray
 	}
@@ -117,6 +117,7 @@ func (r Workflow) Lint(
 					Type:     rule.DotGithubFileTypeWorkflow,
 					ErrText:  "does not have a required " + field,
 					RuleName: r.ConfigName(0),
+					IsError:  false,
 				}
 
 				compliant = false
@@ -144,6 +145,7 @@ func (r Workflow) Lint(
 						Type:     rule.DotGithubFileTypeWorkflow,
 						ErrText:  fmt.Sprintf("dispatch input '%s' does not have a required %s", inputName, field),
 						RuleName: r.ConfigName(0),
+						IsError:  false,
 					}
 
 					compliant = false
@@ -171,6 +173,7 @@ func (r Workflow) Lint(
 						Type:     rule.DotGithubFileTypeWorkflow,
 						ErrText:  fmt.Sprintf("call input '%s' does not have a required %s", inputName, field),
 						RuleName: r.ConfigName(0),
+						IsError:  false,
 					}
 
 					compliant = false

@@ -11,16 +11,18 @@ import (
 func TestFilenameExtensionsAllowedValidate(t *testing.T) {
 	t.Parallel()
 
-	rule := FilenameExtensionsAllowed{}
+	rule := FilenameExtensionsAllowed{
+		FileTypeRequired: "",
+	}
 
-	confBad := []interface{}{"something", "something2"}
+	confBad := []any{"something", "something2"}
 
 	err := rule.Validate(confBad)
 	if err == nil {
 		t.Errorf("FilenameExtensionsAllowed.Validate should return error when conf is %v", confBad)
 	}
 
-	confGood := []interface{}{"yml", "yaml"}
+	confGood := []any{"yml", "yaml"}
 
 	err = rule.Validate(confGood)
 	if err != nil {
@@ -39,7 +41,7 @@ func TestFilenameExtensionsAllowedNotCompliant(t *testing.T) {
 		rule := FilenameExtensionsAllowed{
 			FileTypeRequired: fileTypeRequired,
 		}
-		conf := []interface{}{"yaml"}
+		conf := []any{"yaml"}
 		d := ruletest.GetDotGithub()
 
 		fn := func(f dotgithub.File, _ string) {
@@ -74,7 +76,7 @@ func TestFilenameExtensionsAllowedCompliant(t *testing.T) {
 		rule := FilenameExtensionsAllowed{
 			FileTypeRequired: fileTypeRequired,
 		}
-		conf := []interface{}{"yml"}
+		conf := []any{"yml"}
 		d := ruletest.GetDotGithub()
 
 		fn := func(f dotgithub.File, _ string) {

@@ -16,6 +16,7 @@ func (ar *Runs) SetParentType(t string) {
 		if s == nil {
 			continue
 		}
+
 		s.ParentType = t
 	}
 }
@@ -26,6 +27,7 @@ func (ar *Runs) GetStep(id string) *step.Step {
 		if s == nil {
 			continue
 		}
+
 		if s.ID == id {
 			return s
 		}

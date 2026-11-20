@@ -11,16 +11,18 @@ import (
 func TestExistsValidate(t *testing.T) {
 	t.Parallel()
 
-	rule := Exists{}
+	rule := Exists{
+		FileTypeRequired: "",
+	}
 
-	confBad := []interface{}{"something", "something2"}
+	confBad := []any{"something", "something2"}
 
 	err := rule.Validate(confBad)
 	if err == nil {
 		t.Errorf("Exists.Validate should return error when conf is %v", confBad)
 	}
 
-	confGood := []interface{}{"local", "external"}
+	confGood := []any{"local", "external"}
 
 	err = rule.Validate(confGood)
 	if err != nil {
@@ -39,7 +41,7 @@ func TestLocal(t *testing.T) {
 		rule := Exists{
 			FileTypeRequired: fileTypeRequired,
 		}
-		conf := []interface{}{"local"}
+		conf := []any{"local"}
 		d := ruletest.GetDotGithub()
 
 		fn := func(f dotgithub.File, n string) {
@@ -76,7 +78,7 @@ func TestExternal(t *testing.T) {
 		rule := Exists{
 			FileTypeRequired: fileTypeRequired,
 		}
-		conf := []interface{}{"external"}
+		conf := []any{"external"}
 		d := ruletest.GetDotGithub()
 
 		fn := func(f dotgithub.File, n string) {
@@ -113,7 +115,7 @@ func TestLocalExternal(t *testing.T) {
 		rule := Exists{
 			FileTypeRequired: fileTypeRequired,
 		}
-		conf := []interface{}{"local", "external"}
+		conf := []any{"local", "external"}
 		d := ruletest.GetDotGithub()
 
 		fn := func(f dotgithub.File, n string) {

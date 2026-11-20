@@ -24,7 +24,7 @@ func (r WorkflowReferencedVariableExistsInFile) FileType() int {
 }
 
 // Validate checks whether the given value is valid for this rule's configuration.
-func (r WorkflowReferencedVariableExistsInFile) Validate(conf interface{}) error {
+func (r WorkflowReferencedVariableExistsInFile) Validate(conf any) error {
 	_, ok := conf.(bool)
 	if !ok {
 		return errValueNotBool
@@ -36,7 +36,7 @@ func (r WorkflowReferencedVariableExistsInFile) Validate(conf interface{}) error
 // Lint runs a rule with the specified configuration on a dotgithub.File (action or workflow),
 // reports any errors via the given channel, and returns whether the file is compliant.
 func (r WorkflowReferencedVariableExistsInFile) Lint(
-	conf interface{},
+	conf any,
 	file dotgithub.File,
 	dotGithub *dotgithub.DotGithub,
 	chErrors chan<- glitch.Glitch,
@@ -74,6 +74,7 @@ func (r WorkflowReferencedVariableExistsInFile) Lint(
 					Type:     rule.DotGithubFileTypeWorkflow,
 					ErrText:  fmt.Sprintf("calls a variable '%s' that does not exist in the vars file", string(refVar[1])),
 					RuleName: r.ConfigName(0),
+					IsError:  false,
 				}
 
 				compliant = false
@@ -87,6 +88,7 @@ func (r WorkflowReferencedVariableExistsInFile) Lint(
 					Type:     rule.DotGithubFileTypeWorkflow,
 					ErrText:  fmt.Sprintf("calls a secret '%s' that does not exist in the secrets file", string(refVar[1])),
 					RuleName: r.ConfigName(0),
+					IsError:  false,
 				}
 
 				compliant = false

@@ -17,13 +17,13 @@ var defaultConfig []byte
 
 // Config represents the configuration file.
 type Config struct {
-	Version     string                            `yaml:"version"`
-	RulesConfig map[string]map[string]interface{} `yaml:"rules"`
-	Rules       []rule.Rule                       `yaml:"-"`
-	Values      []interface{}                     `yaml:"-"`
-	WarningOnly map[string]struct{}               `yaml:"-"`
-	Overrides   *Overrides                        `yaml:"overrides,omitempty"`
-	Paths       *Paths                            `yaml:"paths,omitempty"`
+	Version     string                    `yaml:"version"`
+	RulesConfig map[string]map[string]any `yaml:"rules"`
+	Rules       []rule.Rule               `yaml:"-"`
+	Values      []any                     `yaml:"-"`
+	WarningOnly map[string]struct{}       `yaml:"-"`
+	Overrides   *Overrides                `yaml:"overrides,omitempty"`
+	Paths       *Paths                    `yaml:"paths,omitempty"`
 }
 
 // GetDefaultConfig returns a default configuration file.
@@ -65,7 +65,7 @@ func (cfg *Config) IsError(rule string) bool {
 
 func (cfg *Config) readBytesAndValidate(b []byte) error {
 	cfg.Rules = make([]rule.Rule, 0)
-	cfg.Values = make([]interface{}, 0)
+	cfg.Values = make([]any, 0)
 
 	err := yaml.Unmarshal(b, &cfg)
 	if err != nil {

@@ -26,6 +26,7 @@ type Glitch struct {
 // ListToMarkdown takes a list of Glitch instances and generates a Markdown table from it.
 func ListToMarkdown(glitches []*Glitch, limit int) string {
 	var sb strings.Builder
+
 	sb.WriteString(`|Item|Error|
 |---|---|
 `)
@@ -34,6 +35,7 @@ func ListToMarkdown(glitches []*Glitch, limit int) string {
 		if glitch == nil {
 			continue
 		}
+
 		if limit > 0 && i == limit {
 			break
 		}
@@ -47,6 +49,7 @@ func ListToMarkdown(glitches []*Glitch, limit int) string {
 		if name == "" {
 			name = "unknown"
 		}
+
 		name = namePrefix + name
 
 		level := `🟠`

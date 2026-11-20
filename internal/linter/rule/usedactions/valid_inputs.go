@@ -36,7 +36,7 @@ func (r ValidInputs) FileType() int {
 }
 
 // Validate checks whether the given value is valid for this rule's configuration.
-func (r ValidInputs) Validate(conf interface{}) error {
+func (r ValidInputs) Validate(conf any) error {
 	_, ok := conf.(bool)
 	if !ok {
 		return errValueNotBool
@@ -48,7 +48,7 @@ func (r ValidInputs) Validate(conf interface{}) error {
 // Lint runs a rule with the specified configuration on a dotgithub.File (action or workflow),
 // reports any errors via the given channel, and returns whether the file is compliant.
 func (r ValidInputs) Lint(
-	conf interface{},
+	conf any,
 	file dotgithub.File,
 	dotGithub *dotgithub.DotGithub,
 	chErrors chan<- glitch.Glitch,
@@ -62,6 +62,7 @@ func (r ValidInputs) Lint(
 	if r.FileTypeRequired == "action" {
 		fileTypeRequired = rule.DotGithubFileTypeAction
 	}
+
 	if r.FileTypeRequired == "workflow" {
 		fileTypeRequired = rule.DotGithubFileTypeWorkflow
 	}
@@ -144,6 +145,7 @@ func (r ValidInputs) processStepActionInputs(
 			Type:     fileType,
 			ErrText:  fmt.Sprintf("%sstep %d called action requires input '%s'", errPrefix, stepIdx+1, daInputName),
 			RuleName: r.ConfigName(fileType),
+			IsError:  false,
 		}
 
 		foundNotCompliant = true
@@ -179,6 +181,7 @@ func (r ValidInputs) processStepWith(
 			Type:     fileType,
 			ErrText:  fmt.Sprintf("%sstep %d called action non-existing input '%s'", errPrefix, stepIdx+1, usedInput),
 			RuleName: r.ConfigName(fileType),
+			IsError:  false,
 		}
 
 		foundNotCompliant = true
@@ -208,6 +211,7 @@ func (r ValidInputs) processSteps(
 		if ok {
 			errPrefix = newErrPrefix
 		}
+
 		stepAction := r.getStepFromStepUses(step.Uses, dotGithub)
 		if stepAction == nil {
 			continue
@@ -250,8 +254,11 @@ func (r ValidInputs) getStepFromStepUses(
 	if stepUses == "" {
 		return nil
 	}
+
 	isLocal := regexpLocalAction.MatchString(stepUses)
+
 	isExternal := regexpExternalAction.MatchString(stepUses)
+
 	if isLocal {
 		actionName := strings.ReplaceAll(stepUses, "./.github/actions/", "")
 

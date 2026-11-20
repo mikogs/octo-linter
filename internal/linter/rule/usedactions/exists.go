@@ -42,8 +42,8 @@ func (r Exists) FileType() int {
 }
 
 // Validate checks whether the given value is valid for this rule's configuration.
-func (r Exists) Validate(conf interface{}) error {
-	vals, ok := conf.([]interface{})
+func (r Exists) Validate(conf any) error {
+	vals, ok := conf.([]any)
 	if !ok {
 		return errValueNotStringArray
 	}
@@ -65,7 +65,7 @@ func (r Exists) Validate(conf interface{}) error {
 // Lint runs a rule with the specified configuration on a dotgithub.File (action or workflow),
 // reports any errors via the given channel, and returns whether the file is compliant.
 func (r Exists) Lint(
-	conf interface{},
+	conf any,
 	file dotgithub.File,
 	dotGithub *dotgithub.DotGithub,
 	chErrors chan<- glitch.Glitch,
@@ -74,6 +74,7 @@ func (r Exists) Lint(
 	if r.FileTypeRequired == "action" {
 		fileTypeRequired = rule.DotGithubFileTypeAction
 	}
+
 	if r.FileTypeRequired == "workflow" {
 		fileTypeRequired = rule.DotGithubFileTypeWorkflow
 	}
@@ -184,6 +185,7 @@ func (r Exists) processSteps(
 					Type:     fileType,
 					ErrText:  fmt.Sprintf("%sstep %d calls non-existing local action '%s'", errPrefix, stepIdx+1, actionName),
 					RuleName: r.ConfigName(fileType),
+					IsError:  false,
 				}
 			}
 		}
@@ -199,6 +201,7 @@ func (r Exists) processSteps(
 					Type:     fileType,
 					ErrText:  fmt.Sprintf("%sstep %d calls non-existing external action '%s'", errPrefix, stepIdx+1, step.Uses),
 					RuleName: r.ConfigName(fileType),
+					IsError:  false,
 				}
 			}
 		}
@@ -207,13 +210,13 @@ func (r Exists) processSteps(
 	return compliant
 }
 
-func (r Exists) getChecks(conf interface{}) (bool, bool, error) {
+func (r Exists) getChecks(conf any) (bool, bool, error) {
 	var (
 		checkLocal    bool
 		checkExternal bool
 	)
 
-	valInterfaces, confIsInterfaceArray := conf.([]interface{})
+	valInterfaces, confIsInterfaceArray := conf.([]any)
 	if !confIsInterfaceArray {
 		return false, false, errValueNotStringArray
 	}

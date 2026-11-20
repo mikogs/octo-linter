@@ -11,7 +11,9 @@ import (
 func TestNotInDoubleQuotesValidate(t *testing.T) {
 	t.Parallel()
 
-	rule := NotInDoubleQuotes{}
+	rule := NotInDoubleQuotes{
+		FileTypeRequired: "",
+	}
 
 	confBad := 4
 

@@ -35,7 +35,7 @@ func (r Source) FileType() int {
 }
 
 // Validate checks whether the given value is valid for this rule's configuration.
-func (r Source) Validate(conf interface{}) error {
+func (r Source) Validate(conf any) error {
 	val, ok := conf.(string)
 	if !ok {
 		return errValueNotString
@@ -52,7 +52,7 @@ func (r Source) Validate(conf interface{}) error {
 // Lint runs a rule with the specified configuration on a dotgithub.File (action or workflow),
 // reports any errors via the given channel, and returns whether the file is compliant.
 func (r Source) Lint(
-	conf interface{},
+	conf any,
 	file dotgithub.File,
 	_ *dotgithub.DotGithub,
 	chErrors chan<- glitch.Glitch,
@@ -66,6 +66,7 @@ func (r Source) Lint(
 	if r.FileTypeRequired == "action" {
 		fileTypeRequired = rule.DotGithubFileTypeAction
 	}
+
 	if r.FileTypeRequired == "workflow" {
 		fileTypeRequired = rule.DotGithubFileTypeWorkflow
 	}
@@ -159,6 +160,7 @@ func (r Source) processSteps(
 					step.Uses,
 				),
 				RuleName: r.ConfigName(fileType),
+				IsError:  false,
 			}
 
 			compliant = false
@@ -176,6 +178,7 @@ func (r Source) processSteps(
 					step.Uses,
 				),
 				RuleName: r.ConfigName(fileType),
+				IsError:  false,
 			}
 
 			compliant = false
@@ -193,6 +196,7 @@ func (r Source) processSteps(
 					step.Uses,
 				),
 				RuleName: r.ConfigName(fileType),
+				IsError:  false,
 			}
 
 			compliant = false

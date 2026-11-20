@@ -52,9 +52,8 @@ var (
 	)
 )
 
-var (
-	httpClient = &http.Client{Timeout: ExternalActionHTTPTimeout}
-)
+//nolint:exhaustruct,gochecknoglobals
+var httpClient = &http.Client{Timeout: ExternalActionHTTPTimeout}
 
 func errCreatingHTTPRequestForAction(err error) error {
 	return fmt.Errorf("%w: %s", errActionHTTPRequestCreate, err.Error())
@@ -116,8 +115,8 @@ func (d *DotGithub) ReadVars(path string) error {
 		return fmt.Errorf("error reading vars file %s: %w", path, err)
 	}
 
-	lines := strings.Fields(string(b))
-	for _, variable := range lines {
+	lines := strings.FieldsSeq(string(b))
+	for variable := range lines {
 		d.Vars[variable] = true
 	}
 
@@ -142,8 +141,8 @@ func (d *DotGithub) ReadSecrets(path string) error {
 		return fmt.Errorf("error reading secrets file %s: %w", path, err)
 	}
 
-	lines := strings.Fields(string(b))
-	for _, secret := range lines {
+	lines := strings.FieldsSeq(string(b))
+	for secret := range lines {
 		d.Secrets[secret] = true
 	}
 
@@ -161,7 +160,11 @@ func (d *DotGithub) GetExternalAction(name string) *action.Action {
 }
 
 // DownloadExternalAction downloads a GitHub Action from its “uses” path (e.g., "actions/checkout@v4").
-func (d *DotGithub) DownloadExternalAction(ctx context.Context, path string, overrideOutputs map[string][]*regexp.Regexp) error {
+func (d *DotGithub) DownloadExternalAction(
+	ctx context.Context,
+	path string,
+	overrideOutputs map[string][]*regexp.Regexp,
+) error {
 	if d.ExternalActions[path] != nil {
 		return nil
 	}
@@ -170,6 +173,7 @@ func (d *DotGithub) DownloadExternalAction(ctx context.Context, path string, ove
 	if len(repoVersion) < 2 {
 		return fmt.Errorf("invalid external action path format: %s", path)
 	}
+
 	ownerRepoDir := strings.SplitN(repoVersion[0], "/", NumExternalActionPathParts)
 	if len(ownerRepoDir) < 2 {
 		return fmt.Errorf("invalid owner/repo format in path: %s", path)
@@ -211,9 +215,14 @@ func (d *DotGithub) DownloadExternalAction(ctx context.Context, path string, ove
 	}
 
 	if lr.N == 0 {
-		return fmt.Errorf("action body for %s exceeds maximum size of %d bytes", path, MaxExternalActionBodyBytes)
+		return fmt.Errorf(
+			"action body for %s exceeds maximum size of %d bytes",
+			path,
+			MaxExternalActionBodyBytes,
+		)
 	}
 
+	//nolint:exhaustruct
 	actionInstance := &action.Action{
 		Path:    path,
 		DirName: "",
@@ -251,7 +260,11 @@ func (d *DotGithub) IsSecretExist(name string) bool {
 	return ok
 }
 
-func (d *DotGithub) getActionsFromDir(path string, overridePaths map[string]string, overrideOutputs map[string][]*regexp.Regexp) error {
+func (d *DotGithub) getActionsFromDir(
+	path string,
+	overridePaths map[string]string,
+	overrideOutputs map[string][]*regexp.Regexp,
+) error {
 	dirActions := filepath.Join(path, "actions")
 
 	entries, err := os.ReadDir(dirActions)
@@ -273,6 +286,7 @@ func (d *DotGithub) getActionsFromDir(path string, overridePaths map[string]stri
 			continue
 		}
 
+		//nolint:exhaustruct
 		actionInstance := &action.Action{
 			Path:    ymlAction,
 			DirName: entry.Name(),
@@ -306,6 +320,7 @@ func (d *DotGithub) getActionsFromDir(path string, overridePaths map[string]stri
 			continue
 		}
 
+		//nolint:exhaustruct
 		actionInstance := &action.Action{
 			Path:    ymlAction,
 			DirName: "",
@@ -357,6 +372,7 @@ func (d *DotGithub) getWorkflowsFromDir(path string) error {
 			continue
 		}
 
+		//nolint:exhaustruct
 		d.Workflows[entry.Name()] = &workflow.Workflow{
 			Path: ymlWorkflow,
 		}
@@ -365,7 +381,10 @@ func (d *DotGithub) getWorkflowsFromDir(path string) error {
 	return nil
 }
 
-func (d *DotGithub) processActions(ctx context.Context, overrideOutputs map[string][]*regexp.Regexp) error {
+func (d *DotGithub) processActions(
+	ctx context.Context,
+	overrideOutputs map[string][]*regexp.Regexp,
+) error {
 	if len(d.Actions) == 0 {
 		return nil
 	}
@@ -406,7 +425,10 @@ func (d *DotGithub) processActions(ctx context.Context, overrideOutputs map[stri
 	return nil
 }
 
-func (d *DotGithub) processWorkflows(ctx context.Context, overrideOutputs map[string][]*regexp.Regexp) error {
+func (d *DotGithub) processWorkflows(
+	ctx context.Context,
+	overrideOutputs map[string][]*regexp.Regexp,
+) error {
 	if len(d.Workflows) == 0 {
 		return nil
 	}
@@ -479,7 +501,8 @@ func (d *DotGithub) getActionHTTPResponse(
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		resp.Body.Close()
+		_ = resp.Body.Close()
+
 		urlYAML := urlPrefix + "/action.yaml"
 		slog.Debug(
 			"downloading external action yaml",

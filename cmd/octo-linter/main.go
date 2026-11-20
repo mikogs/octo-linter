@@ -6,14 +6,18 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/spf13/cobra"
+	"octo-linter/internal/action"
 	"octo-linter/internal/dotgithub"
 	"octo-linter/internal/linter"
 	"octo-linter/internal/loglevel"
+	"octo-linter/internal/workflow"
 )
 
 //go:generate go run ../../gen.go ../../
@@ -83,6 +87,7 @@ func errReadingDotGithubSecretsFile(err error) error {
 }
 
 func main() {
+	//nolint:exhaustruct
 	rootCmd := &cobra.Command{
 		Use:   "octo-linter",
 		Short: "Validates GitHub Actions workflow and action YAML files",
@@ -90,30 +95,36 @@ func main() {
 
 	rootCmd.AddCommand(createInitCommand())
 	rootCmd.AddCommand(createLintCommand())
+	//nolint:exhaustruct
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "version",
 		Short: "Prints the current version of the tool",
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			os.Exit(versionHandler(context.Background()))
 		},
 	})
 
-	if err := rootCmd.Execute(); err != nil {
+	err := rootCmd.Execute()
+	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
 func createLintCommand() *cobra.Command {
-	var path, config, loglevel, varsFile, secretsFile, output string
-	var logmultiline bool
-	var outputErrors int
+	var (
+		path, config, loglevel, varsFile, secretsFile, output string
+		logmultiline                                          bool
+		outputErrors                                          int
+	)
 
+	//nolint:exhaustruct
 	cmd := &cobra.Command{
 		Use:   "lint",
 		Short: "Runs the linter on files from a specific directory",
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, _ []string) {
 			setLogger(loglevel, logmultiline)
+
 			ctx := cmd.Context()
 
 			cleanPath := filepath.Clean(path)
@@ -122,7 +133,12 @@ func createLintCommand() *cobra.Command {
 					slog.Error("path does not exist", slog.String("path", path))
 					os.Exit(ExitErrReadingDotGithubDir)
 				}
-				slog.Error("error accessing path", slog.String("path", path), slog.String("err", err.Error()))
+
+				slog.Error(
+					"error accessing path",
+					slog.String("path", path),
+					slog.String("err", err.Error()),
+				)
 				os.Exit(ExitErrReadingDotGithubDir)
 			}
 
@@ -130,10 +146,20 @@ func createLintCommand() *cobra.Command {
 				config = filepath.Clean(config)
 				if _, err := os.Stat(config); err != nil {
 					if os.IsNotExist(err) {
-						slog.ErrorContext(ctx, "config file does not exist", slog.String("config", config))
+						slog.ErrorContext(
+							ctx,
+							"config file does not exist",
+							slog.String("config", config),
+						)
 						os.Exit(ExitErrGettingCfgFile)
 					}
-					slog.ErrorContext(ctx, "error accessing config", slog.String("config", config), slog.String("err", err.Error()))
+
+					slog.ErrorContext(
+						ctx,
+						"error accessing config",
+						slog.String("config", config),
+						slog.String("err", err.Error()),
+					)
 					os.Exit(ExitErrGettingCfgFile)
 				}
 			}
@@ -142,10 +168,20 @@ func createLintCommand() *cobra.Command {
 				varsFile = filepath.Clean(varsFile)
 				if _, err := os.Stat(varsFile); err != nil {
 					if os.IsNotExist(err) {
-						slog.ErrorContext(ctx, "vars file does not exist", slog.String("vars_file", varsFile))
+						slog.ErrorContext(
+							ctx,
+							"vars file does not exist",
+							slog.String("vars_file", varsFile),
+						)
 						os.Exit(ExitErrReadingVarsFile)
 					}
-					slog.ErrorContext(ctx, "error accessing vars file", slog.String("vars_file", varsFile), slog.String("err", err.Error()))
+
+					slog.ErrorContext(
+						ctx,
+						"error accessing vars file",
+						slog.String("vars_file", varsFile),
+						slog.String("err", err.Error()),
+					)
 					os.Exit(ExitErrReadingVarsFile)
 				}
 			}
@@ -154,60 +190,100 @@ func createLintCommand() *cobra.Command {
 				secretsFile = filepath.Clean(secretsFile)
 				if _, err := os.Stat(secretsFile); err != nil {
 					if os.IsNotExist(err) {
-						slog.ErrorContext(ctx, "secrets file does not exist", slog.String("secrets_file", secretsFile))
+						slog.ErrorContext(
+							ctx,
+							"secrets file does not exist",
+							slog.String("secrets_file", secretsFile),
+						)
 						os.Exit(ExitErrReadingSecretsFile)
 					}
-					slog.ErrorContext(ctx, "error accessing secrets file", slog.String("secrets_file", secretsFile), slog.String("err", err.Error()))
+
+					slog.ErrorContext(
+						ctx,
+						"error accessing secrets file",
+						slog.String("secrets_file", secretsFile),
+						slog.String("err", err.Error()),
+					)
 					os.Exit(ExitErrReadingSecretsFile)
 				}
 			}
 
 			if output != "" {
 				output = filepath.Clean(output)
+
 				fileInfo, err := os.Stat(output)
 				if err != nil {
 					if os.IsNotExist(err) {
-						slog.ErrorContext(ctx, "output path does not exist", slog.String("output", output))
+						slog.ErrorContext(
+							ctx,
+							"output path does not exist",
+							slog.String("output", output),
+						)
 						os.Exit(ExitErrCheckingDstPath)
 					}
-					slog.ErrorContext(ctx, "error accessing output file", slog.String("output", output), slog.String("err", err.Error()))
+
+					slog.ErrorContext(
+						ctx,
+						"error accessing output file",
+						slog.String("output", output),
+						slog.String("err", err.Error()),
+					)
 					os.Exit(ExitErrCheckingDstPath)
 				}
+
 				if !fileInfo.IsDir() {
 					slog.Error("output is not a directory", slog.String("output", output))
 					os.Exit(ExitDstFileIsDir)
 				}
 			}
 
-			os.Exit(lintHandler(cmd.Context(), loglevel, logmultiline, cleanPath, config, varsFile, secretsFile, output, outputErrors))
+			os.Exit(
+				lintHandler(
+					cmd.Context(),
+					cleanPath,
+					config,
+					varsFile,
+					secretsFile,
+					output,
+					outputErrors,
+				),
+			)
 		},
 	}
 
 	cmd.Flags().StringVarP(&path, "path", "p", "", "Path to .github directory (required)")
-	cmd.MarkFlagRequired("path")
+	_ = cmd.MarkFlagRequired("path")
 	cmd.Flags().StringVarP(&config, "config", "c", "", "Linter config with rules in YAML format")
 	cmd.Flags().StringVarP(&loglevel, "loglevel", "l", "", "One of INFO, ERR, WARN, DEBUG")
-	cmd.Flags().BoolVarP(&logmultiline, "logmultiline", "m", false, "Each log entry key in a separate line")
-	cmd.Flags().StringVarP(&varsFile, "vars-file", "z", "", "Check if variable names exist in this file (one per line)")
-	cmd.Flags().StringVarP(&secretsFile, "secrets-file", "s", "", "Check if secret names exist in this file (one per line)")
-	cmd.Flags().StringVarP(&output, "output", "o", "", "Path to where summary markdown gets generated")
-	cmd.Flags().IntVarP(&outputErrors, "output-errors", "u", 0, "Limit numbers of errors shown in the markdown output file")
+	cmd.Flags().
+		BoolVarP(&logmultiline, "logmultiline", "m", false, "Each log entry key in a separate line")
+	cmd.Flags().
+		StringVarP(&varsFile, "vars-file", "z", "", "Check if variable names exist in this file (one per line)")
+	cmd.Flags().
+		StringVarP(&secretsFile, "secrets-file", "s", "", "Check if secret names exist in this file (one per line)")
+	cmd.Flags().
+		StringVarP(&output, "output", "o", "", "Path to where summary markdown gets generated")
+	cmd.Flags().
+		IntVarP(&outputErrors, "output-errors", "u", 0, "Limit numbers of errors shown in the markdown output file")
 
 	return cmd
 }
 
 func createInitCommand() *cobra.Command {
 	var destination string
+
+	//nolint:exhaustruct
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Create sample dotgithub.yml config file",
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(cmd *cobra.Command, _ []string) {
 			cleanDestination := filepath.Clean(destination)
 			os.Exit(initHandler(cmd.Context(), cleanDestination))
 		},
 	}
 
 	cmd.Flags().StringVarP(&destination, "destination", "d", "", "Destination filename to write to")
+
 	return cmd
 }
 
@@ -220,6 +296,7 @@ func versionHandler(_ context.Context) int {
 func initHandler(ctx context.Context, path string) int {
 	if path == "" {
 		cleanConfigFileName := filepath.Clean(configFileName)
+
 		fileInfo, err := os.Stat(cleanConfigFileName)
 		if err != nil && !os.IsNotExist(err) {
 			slog.ErrorContext(
@@ -240,8 +317,10 @@ func initHandler(ctx context.Context, path string) int {
 						" the destination",
 					slog.String("destination", configFileName),
 				)
+
 				return ExitDstFileIsDir
 			}
+
 			slog.WarnContext(ctx, "config file already exists, it will be overwritten")
 		}
 
@@ -270,7 +349,11 @@ func initHandler(ctx context.Context, path string) int {
 	return ExitOK
 }
 
-func lintHandler(ctx context.Context, loglevel string, logmultiline bool, path, config, varsFile, secretsFile, output string, outputErrors int) int {
+func lintHandler(
+	ctx context.Context,
+	path, config, varsFile, secretsFile, output string,
+	outputErrors int,
+) int {
 	lint, err := getLinter(config, path)
 	if err != nil {
 		return errorToExitCode(err)
@@ -281,14 +364,12 @@ func lintHandler(ctx context.Context, loglevel string, logmultiline bool, path, 
 		return errorToExitCode(err)
 	}
 
-	outputLimit := 0
-	if outputErrors > 0 {
-		outputLimit = outputErrors
-	}
+	outputLimit := max(outputErrors, 0)
 
 	status, err := lint.Lint(dotGithub, output, outputLimit)
 	if err != nil {
 		slog.ErrorContext(ctx, "error linting", slog.String("err", err.Error()))
+
 		return ExitErrLinting
 	}
 
@@ -306,21 +387,27 @@ func errorToExitCode(err error) int {
 	if errors.Is(err, errCfgFileGet) {
 		return ExitErrGettingCfgFile
 	}
+
 	if errors.Is(err, errCfgFileRead) {
 		return ExitErrReadingCfgFile
 	}
+
 	if errors.Is(err, errDefaultCfgFileRead) {
 		return ExitErrReadingDefaultCfgFile
 	}
+
 	if errors.Is(err, errDotGithubDirRead) {
 		return ExitErrReadingDotGithubDir
 	}
+
 	if errors.Is(err, errDotGithubVarsFileRead) {
 		return ExitErrReadingVarsFile
 	}
+
 	if errors.Is(err, errDotGithubSecretsFileRead) {
 		return ExitErrReadingSecretsFile
 	}
+
 	return ExitErrLinting
 }
 
@@ -386,6 +473,7 @@ func getLinter(cfgPath string, dotGithubPath string) (*linter.Linter, error) {
 		return nil, errGettingCfgFile(err)
 	}
 
+	//nolint:exhaustruct
 	configInstance := linter.Config{}
 
 	err = populateConfigFromFile(&configInstance, cfgFile)
@@ -407,17 +495,22 @@ func getDotGithub(
 	secretsFile string,
 	overrides *linter.Overrides,
 ) (*dotgithub.DotGithub, error) {
-	dotGithub := dotgithub.DotGithub{}
+	dotGithub := dotgithub.DotGithub{
+		Actions:         map[string]*action.Action{},
+		ExternalActions: map[string]*action.Action{},
+		Workflows:       map[string]*workflow.Workflow{},
+		Vars:            map[string]bool{},
+		Secrets:         map[string]bool{},
+	}
 
 	overridePaths := map[string]string{}
 	overrideOutputs := map[string][]*regexp.Regexp{}
 
 	if overrides != nil {
 		if len(overrides.ExternalActionsPaths) > 0 {
-			for action, path := range overrides.ExternalActionsPaths {
-				overridePaths[action] = path
-			}
+			maps.Copy(overridePaths, overrides.ExternalActionsPaths)
 		}
+
 		if len(overrides.ExternalActionsOutputs) > 0 {
 			overrideOutputs = overrides.ExternalActionsOutputs
 		}
@@ -469,18 +562,26 @@ func getDotGithub(
 func setLogger(loglevelFlag string, multiline bool) {
 	logLevel := loglevel.GetLogLevelFromString(loglevelFlag)
 
+	//nolint:exhaustruct
 	opts := &slog.HandlerOptions{
 		Level: logLevel,
 		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
 			if a.Key == slog.TimeKey {
+				//nolint:exhaustruct
 				return slog.Attr{}
 			}
+
+			if len(groups) > 0 {
+				a.Key = strings.Join(groups, ".") + "." + a.Key
+			}
+
 			return a
 		},
 	}
 
 	var logger *slog.Logger
 	if multiline {
+		//nolint:exhaustruct
 		logger = slog.New(&customHandler{opts: opts, w: os.Stderr})
 	} else {
 		logger = slog.New(slog.NewTextHandler(os.Stderr, opts))

@@ -23,7 +23,7 @@ func (r WorkflowSingleJobOnlyName) FileType() int {
 }
 
 // Validate checks whether the given value is valid for this rule's configuration.
-func (r WorkflowSingleJobOnlyName) Validate(conf interface{}) error {
+func (r WorkflowSingleJobOnlyName) Validate(conf any) error {
 	_, ok := conf.(string)
 	if !ok {
 		return errValueNotString
@@ -35,7 +35,7 @@ func (r WorkflowSingleJobOnlyName) Validate(conf interface{}) error {
 // Lint runs a rule with the specified configuration on a dotgithub.File (action or workflow),
 // reports any errors via the given channel, and returns whether the file is compliant.
 func (r WorkflowSingleJobOnlyName) Lint(
-	conf interface{},
+	conf any,
 	file dotgithub.File,
 	_ *dotgithub.DotGithub,
 	chErrors chan<- glitch.Glitch,
@@ -70,6 +70,7 @@ func (r WorkflowSingleJobOnlyName) Lint(
 				Type:     rule.DotGithubFileTypeWorkflow,
 				ErrText:  fmt.Sprintf("has only one job and it should be called '%s'", confValue),
 				RuleName: r.ConfigName(0),
+				IsError:  false,
 			}
 
 			return false, nil

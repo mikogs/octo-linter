@@ -35,7 +35,7 @@ func (r ReferencedInputExists) FileType() int {
 }
 
 // Validate checks whether the given value is valid for this rule's configuration.
-func (r ReferencedInputExists) Validate(conf interface{}) error {
+func (r ReferencedInputExists) Validate(conf any) error {
 	_, ok := conf.(bool)
 	if !ok {
 		return errValueNotBool
@@ -47,7 +47,7 @@ func (r ReferencedInputExists) Validate(conf interface{}) error {
 // Lint runs a rule with the specified configuration on a dotgithub.File (action or workflow),
 // reports any errors via the given channel, and returns whether the file is compliant.
 func (r ReferencedInputExists) Lint(
-	conf interface{},
+	conf any,
 	file dotgithub.File,
 	_ *dotgithub.DotGithub,
 	chErrors chan<- glitch.Glitch,
@@ -61,6 +61,7 @@ func (r ReferencedInputExists) Lint(
 	if r.FileTypeRequired == "action" {
 		fileTypeRequired = rule.DotGithubFileTypeAction
 	}
+
 	if r.FileTypeRequired == "workflow" {
 		fileTypeRequired = rule.DotGithubFileTypeWorkflow
 	}
@@ -122,6 +123,7 @@ func (r ReferencedInputExists) processAction(
 				Type:     rule.DotGithubFileTypeAction,
 				ErrText:  fmt.Sprintf("calls an input '%s' that does not exist", string(refInput[1])),
 				RuleName: r.ConfigName(rule.DotGithubFileTypeAction),
+				IsError:  false,
 			}
 
 			foundNotCompliant = true
@@ -165,6 +167,7 @@ func (r ReferencedInputExists) processWorkflow(
 			Type:     rule.DotGithubFileTypeWorkflow,
 			ErrText:  fmt.Sprintf("calls an input '%s' that does not exist", string(refInput[1])),
 			RuleName: r.ConfigName(rule.DotGithubFileTypeWorkflow),
+			IsError:  false,
 		}
 
 		foundNotCompliant = true

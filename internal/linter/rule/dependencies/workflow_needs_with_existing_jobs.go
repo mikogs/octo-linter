@@ -23,7 +23,7 @@ func (r WorkflowNeedsWithExistingJobs) FileType() int {
 }
 
 // Validate checks whether the given value is valid for this rule's configuration.
-func (r WorkflowNeedsWithExistingJobs) Validate(conf interface{}) error {
+func (r WorkflowNeedsWithExistingJobs) Validate(conf any) error {
 	_, ok := conf.(bool)
 	if !ok {
 		return errValueNotBool
@@ -35,7 +35,7 @@ func (r WorkflowNeedsWithExistingJobs) Validate(conf interface{}) error {
 // Lint runs a rule with the specified configuration on a dotgithub.File (action or workflow),
 // reports any errors via the given channel, and returns whether the file is compliant.
 func (r WorkflowNeedsWithExistingJobs) Lint(
-	conf interface{},
+	conf any,
 	file dotgithub.File,
 	_ *dotgithub.DotGithub,
 	chErrors chan<- glitch.Glitch,
@@ -77,7 +77,7 @@ func (r WorkflowNeedsWithExistingJobs) Lint(
 func (r WorkflowNeedsWithExistingJobs) processJobNeeds(
 	workflowInstance *workflow.Workflow,
 	jobName string,
-	jobNeeds interface{},
+	jobNeeds any,
 	chErrors chan<- glitch.Glitch,
 ) bool {
 	needsStr, needsIsString := jobNeeds.(string)
@@ -92,12 +92,13 @@ func (r WorkflowNeedsWithExistingJobs) processJobNeeds(
 			Type:     rule.DotGithubFileTypeWorkflow,
 			ErrText:  fmt.Sprintf("job '%s' has non-existing job '%s' in 'needs' field", jobName, needsStr),
 			RuleName: r.ConfigName(0),
+			IsError:  false,
 		}
 
 		return true
 	}
 
-	needsList, needsIsList := jobNeeds.([]interface{})
+	needsList, needsIsList := jobNeeds.([]any)
 	if !needsIsList {
 		return false
 	}
@@ -120,6 +121,7 @@ func (r WorkflowNeedsWithExistingJobs) processJobNeeds(
 			Type:     rule.DotGithubFileTypeWorkflow,
 			ErrText:  fmt.Sprintf("job '%s' has non-existing job '%s' in 'needs' field", jobName, neededJob),
 			RuleName: r.ConfigName(0),
+			IsError:  false,
 		}
 
 		foundNotCompliant = true

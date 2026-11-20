@@ -11,7 +11,9 @@ import (
 func TestNotOneWordValidate(t *testing.T) {
 	t.Parallel()
 
-	rule := NotOneWord{}
+	rule := NotOneWord{
+		FileTypeRequired: "",
+	}
 
 	confBad := 4
 

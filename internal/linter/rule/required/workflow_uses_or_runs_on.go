@@ -23,7 +23,7 @@ func (r WorkflowUsesOrRunsOn) FileType() int {
 }
 
 // Validate checks whether the given value is valid for this rule's configuration.
-func (r WorkflowUsesOrRunsOn) Validate(conf interface{}) error {
+func (r WorkflowUsesOrRunsOn) Validate(conf any) error {
 	_, ok := conf.(bool)
 	if !ok {
 		return errValueNotBool
@@ -35,7 +35,7 @@ func (r WorkflowUsesOrRunsOn) Validate(conf interface{}) error {
 // Lint runs a rule with the specified configuration on a dotgithub.File (action or workflow),
 // reports any errors via the given channel, and returns whether the file is compliant.
 func (r WorkflowUsesOrRunsOn) Lint(
-	conf interface{},
+	conf any,
 	file dotgithub.File,
 	_ *dotgithub.DotGithub,
 	chErrors chan<- glitch.Glitch,
@@ -68,6 +68,7 @@ func (r WorkflowUsesOrRunsOn) Lint(
 				Type:     rule.DotGithubFileTypeWorkflow,
 				ErrText:  fmt.Sprintf("job '%s' should have either 'uses' or 'runs-on' field", jobName),
 				RuleName: r.ConfigName(0),
+				IsError:  false,
 			}
 
 			compliant = false
@@ -82,6 +83,7 @@ func (r WorkflowUsesOrRunsOn) Lint(
 					Type:     rule.DotGithubFileTypeWorkflow,
 					ErrText:  fmt.Sprintf("job '%s' should have either 'uses' or 'runs-on' field", jobName),
 					RuleName: r.ConfigName(0),
+					IsError:  false,
 				}
 
 				compliant = false

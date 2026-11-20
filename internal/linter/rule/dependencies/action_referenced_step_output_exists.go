@@ -25,7 +25,7 @@ func (r ActionReferencedStepOutputExists) FileType() int {
 }
 
 // Validate checks whether the given value is valid for this rule's configuration.
-func (r ActionReferencedStepOutputExists) Validate(conf interface{}) error {
+func (r ActionReferencedStepOutputExists) Validate(conf any) error {
 	_, ok := conf.(bool)
 	if !ok {
 		return errValueNotBool
@@ -39,7 +39,7 @@ func (r ActionReferencedStepOutputExists) Validate(conf interface{}) error {
 //
 //nolint:gocognit,funlen
 func (r ActionReferencedStepOutputExists) Lint(
-	conf interface{},
+	conf any,
 	file dotgithub.File,
 	dotGithub *dotgithub.DotGithub,
 	chErrors chan<- glitch.Glitch,
@@ -72,6 +72,7 @@ func (r ActionReferencedStepOutputExists) Lint(
 				Type:     rule.DotGithubFileTypeAction,
 				ErrText:  fmt.Sprintf("calls a step output '%s' but 'runs' does not exist", stepName),
 				RuleName: r.ConfigName(0),
+				IsError:  false,
 			}
 
 			compliant = false
@@ -87,6 +88,7 @@ func (r ActionReferencedStepOutputExists) Lint(
 				Type:     rule.DotGithubFileTypeAction,
 				ErrText:  fmt.Sprintf("calls a step '%s' output '%s' but step does not exist", stepName, outputName),
 				RuleName: r.ConfigName(0),
+				IsError:  false,
 			}
 
 			compliant = false
@@ -112,6 +114,7 @@ func (r ActionReferencedStepOutputExists) Lint(
 					Type:     rule.DotGithubFileTypeAction,
 					ErrText:  fmt.Sprintf("calls a step '%s' output '%s' that does not exist", stepName, outputName),
 					RuleName: r.ConfigName(0),
+					IsError:  false,
 				}
 
 				compliant = false
@@ -142,6 +145,7 @@ func (r ActionReferencedStepOutputExists) Lint(
 				Type:     rule.DotGithubFileTypeAction,
 				ErrText:  fmt.Sprintf("calls a step '%s' output '%s' on action that does not exist", stepName, outputName),
 				RuleName: r.ConfigName(0),
+				IsError:  false,
 			}
 
 			compliant = false
@@ -171,6 +175,7 @@ func (r ActionReferencedStepOutputExists) Lint(
 				Type:     rule.DotGithubFileTypeAction,
 				ErrText:  fmt.Sprintf("calls step '%s' output '%s' on action and that output does not exist", stepName, outputName),
 				RuleName: r.ConfigName(0),
+				IsError:  false,
 			}
 
 			compliant = false

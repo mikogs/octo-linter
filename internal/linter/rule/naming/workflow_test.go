@@ -11,7 +11,9 @@ import (
 func TestWorkflowValidate(t *testing.T) {
 	t.Parallel()
 
-	rule := Workflow{}
+	rule := Workflow{
+		Field: 0,
+	}
 
 	confBad := "some string"
 

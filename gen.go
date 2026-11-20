@@ -38,6 +38,7 @@ func main() {
 				N: "filenames.FilenameExtensionsAllowed",
 				F: map[string]string{"FileTypeRequired": `"action"`},
 			},
+			//nolint:exhaustruct
 			"filenames__action_directory_name_format": {
 				N: "filenames.ActionDirectoryNameFormat",
 			},
@@ -45,9 +46,11 @@ func main() {
 				N: "filenames.FilenameExtensionsAllowed",
 				F: map[string]string{"FileTypeRequired": `"workflow"`},
 			},
+			//nolint:exhaustruct
 			"filenames__workflow_filename_base_format": {
 				N: "filenames.WorkflowFilenameBaseFormat",
 			},
+			//nolint:exhaustruct
 			"workflow_runners__not_latest": {
 				N: "runners.NotLatest",
 			},
@@ -67,6 +70,7 @@ func main() {
 				N: "refvars.NotInDoubleQuotes",
 				F: map[string]string{"FileTypeRequired": `"workflow"`},
 			},
+			//nolint:exhaustruct
 			"dependencies__workflow_needs_field_must_contain_already_existing_jobs": {
 				N: "dependencies.WorkflowNeedsWithExistingJobs",
 			},
@@ -74,9 +78,11 @@ func main() {
 				N: "dependencies.ReferencedInputExists",
 				F: map[string]string{"FileTypeRequired": `"action"`},
 			},
+			//nolint:exhaustruct
 			"dependencies__action_referenced_step_output_must_exist": {
 				N: "dependencies.ActionReferencedStepOutputExists",
 			},
+			//nolint:exhaustruct
 			"dependencies__workflow_referenced_variable_must_exists_in_attached_file": {
 				N: "dependencies.WorkflowReferencedVariableExistsInFile",
 			},
@@ -152,6 +158,7 @@ func main() {
 				N: "naming.Workflow",
 				F: map[string]string{"Field": `naming.WorkflowFieldJobName`},
 			},
+			//nolint:exhaustruct
 			"naming_conventions__workflow_single_job_only_name": {
 				N: "naming.WorkflowSingleJobOnlyName",
 			},
@@ -179,6 +186,7 @@ func main() {
 				N: "required.Workflow",
 				F: map[string]string{"Field": `required.WorkflowFieldCallInput`},
 			},
+			//nolint:exhaustruct
 			"required_fields__workflow_requires_uses_or_runs_on_required": {
 				N: "required.WorkflowUsesOrRunsOn",
 			},

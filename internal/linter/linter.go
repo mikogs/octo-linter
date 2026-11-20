@@ -142,7 +142,10 @@ func (l *Linter) Lint(dotGithub *dotgithub.DotGithub, output string, outputLimit
 	// Produce jobs in the current goroutine.
 	for _, action := range dotGithub.Actions {
 		if l.Config.Paths != nil && !l.Config.Paths.Check(action.Path) {
-			slog.Info("skipping action due to 'paths' configuration", slog.String("path", action.Path))
+			slog.Info(
+				"skipping action due to 'paths' configuration",
+				slog.String("path", action.Path),
+			)
 
 			continue
 		}
@@ -167,7 +170,10 @@ func (l *Linter) Lint(dotGithub *dotgithub.DotGithub, output string, outputLimit
 
 	for _, workflow := range dotGithub.Workflows {
 		if l.Config.Paths != nil && !l.Config.Paths.Check(workflow.Path) {
-			slog.Info("skipping workflow due to 'paths' configuration", slog.String("path", workflow.Path))
+			slog.Info(
+				"skipping workflow due to 'paths' configuration",
+				slog.String("path", workflow.Path),
+			)
 
 			continue
 		}
@@ -190,7 +196,7 @@ func (l *Linter) Lint(dotGithub *dotgithub.DotGithub, output string, outputLimit
 		}
 	}
 
-	close(chJobs)   // signal workers to stop
+	close(chJobs)     // signal workers to stop
 	consumerWg.Wait() // wait for consumer to drain all findings
 
 	finalStatus := HasNoErrorsOrWarnings

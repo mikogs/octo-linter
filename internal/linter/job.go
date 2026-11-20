@@ -12,7 +12,7 @@ type Job struct {
 	file      dotgithub.File
 	dotGithub *dotgithub.DotGithub
 	isError   bool
-	value     interface{}
+	value     any
 }
 
 // Run executes the Job, routing any lint findings to the appropriate channel.

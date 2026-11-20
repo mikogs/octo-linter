@@ -11,7 +11,9 @@ import (
 func TestActionValidate(t *testing.T) {
 	t.Parallel()
 
-	rule := Action{}
+	rule := Action{
+		Field: 0,
+	}
 
 	confBad := "some string"
 

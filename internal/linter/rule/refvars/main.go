@@ -39,6 +39,7 @@ func processActionForRegexp(
 			Type:     rule.DotGithubFileTypeAction,
 			ErrText:  fmt.Sprintf("calls a variable '%s' that is %s", string(ref[1]), errorText),
 			RuleName: ruleConfigName,
+			IsError:  false,
 		}
 
 		foundNotCompliant = true
@@ -64,6 +65,7 @@ func processWorkflowForRegexp(
 			Type:     rule.DotGithubFileTypeWorkflow,
 			ErrText:  fmt.Sprintf("calls a variable '%s' that is %s", string(ref[1]), errorText),
 			RuleName: ruleConfigName,
+			IsError:  false,
 		}
 
 		foundNotCompliant = true

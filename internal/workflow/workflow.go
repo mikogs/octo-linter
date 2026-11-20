@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"strings"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 )
@@ -36,11 +36,14 @@ func (w *Workflow) Unmarshal(fromRaw bool) error {
 		if err != nil {
 			return fmt.Errorf("cannot read file %s: %w", w.Path, err)
 		}
+
 		w.Raw = b
 	}
 
 	w.FileName = filepath.Base(w.Path)
+
 	ext := filepath.Ext(w.FileName)
+
 	if ext == ".yaml" || ext == ".yml" {
 		w.DisplayName = strings.TrimSuffix(w.FileName, ext)
 	} else {

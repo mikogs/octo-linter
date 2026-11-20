@@ -61,7 +61,7 @@ func (r Workflow) FileType() int {
 }
 
 // Validate checks whether the given value is valid for this rule's configuration.
-func (r Workflow) Validate(conf interface{}) error {
+func (r Workflow) Validate(conf any) error {
 	val, ok := conf.(string)
 	if !ok {
 		return errValueNotString
@@ -80,7 +80,7 @@ func (r Workflow) Validate(conf interface{}) error {
 //
 //nolint:gocognit,funlen,gocyclo
 func (r Workflow) Lint(
-	conf interface{},
+	conf any,
 	file dotgithub.File,
 	_ *dotgithub.DotGithub,
 	chErrors chan<- glitch.Glitch,
@@ -116,6 +116,7 @@ func (r Workflow) Lint(
 					Type:     rule.DotGithubFileTypeWorkflow,
 					ErrText:  fmt.Sprintf("env '%s' must be %s", envName, confValue),
 					RuleName: r.ConfigName(0),
+					IsError:  false,
 				}
 			}
 		}
@@ -138,6 +139,7 @@ func (r Workflow) Lint(
 						Type:     rule.DotGithubFileTypeWorkflow,
 						ErrText:  fmt.Sprintf("job '%s' env '%s' must be %s", jobName, envName, confValue),
 						RuleName: r.ConfigName(0),
+						IsError:  false,
 					}
 				}
 			}
@@ -158,6 +160,7 @@ func (r Workflow) Lint(
 							Type:     rule.DotGithubFileTypeWorkflow,
 							ErrText:  fmt.Sprintf("job '%s' step %d env '%s' must be %s", jobName, stepIdx, envName, confValue),
 							RuleName: r.ConfigName(0),
+							IsError:  false,
 						}
 
 						compliant = false
@@ -183,6 +186,7 @@ func (r Workflow) Lint(
 						Type:     rule.DotGithubFileTypeWorkflow,
 						ErrText:  fmt.Sprintf("calls a variable '%s' that must be %s", string(refVar[1]), confValue),
 						RuleName: r.ConfigName(0),
+						IsError:  false,
 					}
 
 					compliant = false
@@ -205,6 +209,7 @@ func (r Workflow) Lint(
 					Type:     rule.DotGithubFileTypeWorkflow,
 					ErrText:  fmt.Sprintf("call input '%s' name must be %s", inputName, confValue),
 					RuleName: r.ConfigName(0),
+					IsError:  false,
 				}
 
 				compliant = false
@@ -226,6 +231,7 @@ func (r Workflow) Lint(
 					Type:     rule.DotGithubFileTypeWorkflow,
 					ErrText:  fmt.Sprintf("dispatch input '%s' name must be %s", inputName, confValue),
 					RuleName: r.ConfigName(0),
+					IsError:  false,
 				}
 
 				compliant = false
@@ -245,6 +251,7 @@ func (r Workflow) Lint(
 					Type:     rule.DotGithubFileTypeWorkflow,
 					ErrText:  fmt.Sprintf("job '%s' name must be %s", jobName, confValue),
 					RuleName: r.ConfigName(0),
+					IsError:  false,
 				}
 
 				compliant = false

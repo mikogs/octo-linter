@@ -33,7 +33,7 @@ func (r NotOneWord) FileType() int {
 }
 
 // Validate checks whether the given value is valid for this rule's configuration.
-func (r NotOneWord) Validate(conf interface{}) error {
+func (r NotOneWord) Validate(conf any) error {
 	_, ok := conf.(bool)
 	if !ok {
 		return errValueNotBool
@@ -45,7 +45,7 @@ func (r NotOneWord) Validate(conf interface{}) error {
 // Lint runs a rule with the specified configuration on a dotgithub.File (action or workflow),
 // reports any errors via the given channel, and returns whether the file is compliant.
 func (r NotOneWord) Lint(
-	conf interface{},
+	conf any,
 	file dotgithub.File,
 	_ *dotgithub.DotGithub,
 	chErrors chan<- glitch.Glitch,
@@ -59,6 +59,7 @@ func (r NotOneWord) Lint(
 	if r.FileTypeRequired == "action" {
 		fileTypeRequired = rule.DotGithubFileTypeAction
 	}
+
 	if r.FileTypeRequired == "workflow" {
 		fileTypeRequired = rule.DotGithubFileTypeWorkflow
 	}
@@ -66,6 +67,7 @@ func (r NotOneWord) Lint(
 	if file.GetType() != fileTypeRequired {
 		return true, nil
 	}
+
 	if !confValue {
 		return true, nil
 	}

@@ -31,7 +31,7 @@ func TestWorkflowNeedsWithExistingJobsValidate(t *testing.T) {
 func TestWorkflowNeedsWithExistingJobsNotCompliant(t *testing.T) {
 	t.Parallel()
 
-	rule := ReferencedInputExists{}
+	rule := WorkflowNeedsWithExistingJobs{}
 	d := ruletest.GetDotGithub()
 	conf := true
 
@@ -62,7 +62,7 @@ func TestWorkflowNeedsWithExistingJobsNotCompliant(t *testing.T) {
 func TestWorkflowNeedsWithExistingJobsCompliant(t *testing.T) {
 	t.Parallel()
 
-	rule := ReferencedInputExists{}
+	rule := WorkflowNeedsWithExistingJobs{}
 	d := ruletest.GetDotGithub()
 	conf := true
 

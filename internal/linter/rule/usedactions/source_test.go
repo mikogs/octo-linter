@@ -11,16 +11,18 @@ import (
 func TestSourceValidate(t *testing.T) {
 	t.Parallel()
 
-	rule := Source{}
+	rule := Source{
+		FileTypeRequired: "",
+	}
 
-	for _, confBad := range []interface{}{4, true, "wrong"} {
+	for _, confBad := range []any{4, true, "wrong"} {
 		err := rule.Validate(confBad)
 		if err == nil {
 			t.Errorf("Source.Validate should return error when conf is %v", confBad)
 		}
 	}
 
-	for _, confGood := range []interface{}{ValueLocalOnly, ValueLocalOrExternal, ValueExternalOnly} {
+	for _, confGood := range []any{ValueLocalOnly, ValueLocalOrExternal, ValueExternalOnly} {
 		err := rule.Validate(confGood)
 		if err != nil {
 			t.Errorf("Source.Validate should not return error when conf is %v", confGood)

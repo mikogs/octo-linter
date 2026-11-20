@@ -22,7 +22,7 @@ func TestWorkflowValidate(t *testing.T) {
 		t.Errorf("Workflow.Validate should return error when conf is not []string")
 	}
 
-	confGood := []interface{}{ValueName}
+	confGood := []any{ValueName}
 
 	err = rule.Validate(confGood)
 	if err != nil {
@@ -34,14 +34,14 @@ func TestWorkflowValidate(t *testing.T) {
 			Field: f,
 		}
 
-		confBad2 := []interface{}{ValueName, ValueDesc}
+		confBad2 := []any{ValueName, ValueDesc}
 
 		err = rule.Validate(confBad2)
 		if err == nil {
 			t.Errorf("Workflow.Validate should return error when conf contains invalid values")
 		}
 
-		confGood2 := []interface{}{ValueDesc}
+		confGood2 := []any{ValueDesc}
 
 		err = rule.Validate(confGood2)
 		if err != nil {
@@ -56,7 +56,7 @@ func TestWorkflowFieldWorkflowNotCompliant(t *testing.T) {
 	rule := Workflow{
 		Field: WorkflowFieldWorkflow,
 	}
-	conf := []interface{}{"name"}
+	conf := []any{"name"}
 	d := ruletest.GetDotGithub()
 
 	fn := func(f dotgithub.File, _ string) {
@@ -84,7 +84,7 @@ func TestWorkflowFieldCallInputDispatchInputNotCompliant(t *testing.T) {
 		rule := Workflow{
 			Field: field,
 		}
-		conf := []interface{}{ValueDesc}
+		conf := []any{ValueDesc}
 		d := ruletest.GetDotGithub()
 
 		fn := func(f dotgithub.File, _ string) {
@@ -118,7 +118,7 @@ func TestWorkflowFieldWorkflowCompliant(t *testing.T) {
 	rule := Workflow{
 		Field: WorkflowFieldWorkflow,
 	}
-	conf := []interface{}{ValueName}
+	conf := []any{ValueName}
 	d := ruletest.GetDotGithub()
 
 	fn := func(f dotgithub.File, _ string) {
@@ -149,7 +149,7 @@ func TestWorkflowFieldCallInputDispatchInputCompliant(t *testing.T) {
 		rule := Workflow{
 			Field: field,
 		}
-		conf := []interface{}{ValueDesc}
+		conf := []any{ValueDesc}
 		d := ruletest.GetDotGithub()
 
 		fn := func(f dotgithub.File, _ string) {

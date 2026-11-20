@@ -15,9 +15,9 @@ const (
 
 // Rule represents a rule.
 type Rule interface {
-	Validate(conf interface{}) error
+	Validate(conf any) error
 	Lint(
-		config interface{},
+		config any,
 		f dotgithub.File,
 		d *dotgithub.DotGithub,
 		chErrors chan<- glitch.Glitch,

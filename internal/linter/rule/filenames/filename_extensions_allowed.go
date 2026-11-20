@@ -33,8 +33,8 @@ func (r FilenameExtensionsAllowed) FileType() int {
 }
 
 // Validate checks whether the given value is valid for this rule's configuration.
-func (r FilenameExtensionsAllowed) Validate(conf interface{}) error {
-	vals, ok := conf.([]interface{})
+func (r FilenameExtensionsAllowed) Validate(conf any) error {
+	vals, ok := conf.([]any)
 	if !ok {
 		return errValueNotStringArray
 	}
@@ -56,7 +56,7 @@ func (r FilenameExtensionsAllowed) Validate(conf interface{}) error {
 // Lint runs a rule with the specified configuration on a dotgithub.File (action or workflow),
 // reports any errors via the given channel, and returns whether the file is compliant.
 func (r FilenameExtensionsAllowed) Lint(
-	conf interface{},
+	conf any,
 	file dotgithub.File,
 	_ *dotgithub.DotGithub,
 	chErrors chan<- glitch.Glitch,
@@ -65,6 +65,7 @@ func (r FilenameExtensionsAllowed) Lint(
 	if r.FileTypeRequired == "action" {
 		fileTypeRequired = rule.DotGithubFileTypeAction
 	}
+
 	if r.FileTypeRequired == "workflow" {
 		fileTypeRequired = rule.DotGithubFileTypeWorkflow
 	}
@@ -73,7 +74,7 @@ func (r FilenameExtensionsAllowed) Lint(
 		return true, nil
 	}
 
-	allowedExtensions, confIsInterfaceArray := conf.([]interface{})
+	allowedExtensions, confIsInterfaceArray := conf.([]any)
 	if !confIsInterfaceArray {
 		return false, errValueNotStringArray
 	}
@@ -111,6 +112,7 @@ func (r FilenameExtensionsAllowed) Lint(
 		Type:     fileType,
 		ErrText:  "file extension must be one of: " + strings.Join(allowedExtensionsList, ","),
 		RuleName: r.ConfigName(fileType),
+		IsError:  false,
 	}
 
 	return false, nil
