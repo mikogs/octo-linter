@@ -13,6 +13,9 @@ type Runs struct {
 // SetParentType sets type of the parent for all of the steps.
 func (ar *Runs) SetParentType(t string) {
 	for _, s := range ar.Steps {
+		if s == nil {
+			continue
+		}
 		s.ParentType = t
 	}
 }
@@ -20,6 +23,9 @@ func (ar *Runs) SetParentType(t string) {
 // GetStep returns a Step by its id.
 func (ar *Runs) GetStep(id string) *step.Step {
 	for _, s := range ar.Steps {
+		if s == nil {
+			continue
+		}
 		if s.ID == id {
 			return s
 		}

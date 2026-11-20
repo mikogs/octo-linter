@@ -17,6 +17,9 @@ type Job struct {
 // SetParentType sets parent type for all the steps.
 func (wj *Job) SetParentType(t string) {
 	for _, s := range wj.Steps {
+		if s == nil {
+			continue
+		}
 		s.ParentType = t
 	}
 }
