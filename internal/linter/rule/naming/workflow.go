@@ -78,7 +78,7 @@ func (r Workflow) Validate(conf any) error {
 // Lint runs a rule with the specified configuration on a dotgithub.File (action or workflow),
 // reports any errors via the given channel, and returns whether the file is compliant.
 //
-//nolint:gocognit,funlen,gocyclo
+//nolint:gocognit,funlen,gocyclo,maintidx
 func (r Workflow) Lint(
 	conf any,
 	file dotgithub.File,
