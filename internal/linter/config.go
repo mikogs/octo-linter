@@ -15,12 +15,17 @@ import (
 //go:embed dotgithub.yml
 var defaultConfig []byte
 
+// RuleEntry pairs a rule with its configuration value.
+type RuleEntry struct {
+	Rule  rule.Rule
+	Value any
+}
+
 // Config represents the configuration file.
 type Config struct {
 	Version     string                    `yaml:"version"`
 	RulesConfig map[string]map[string]any `yaml:"rules"`
-	Rules       []rule.Rule               `yaml:"-"`
-	Values      []any                     `yaml:"-"`
+	Rules       []RuleEntry               `yaml:"-"`
 	WarningOnly map[string]struct{}       `yaml:"-"`
 	Overrides   *Overrides                `yaml:"overrides,omitempty"`
 	Paths       *Paths                    `yaml:"paths,omitempty"`
@@ -64,8 +69,7 @@ func (cfg *Config) IsError(rule string) bool {
 }
 
 func (cfg *Config) readBytesAndValidate(b []byte) error {
-	cfg.Rules = make([]rule.Rule, 0)
-	cfg.Values = make([]any, 0)
+	cfg.Rules = make([]RuleEntry, 0)
 
 	err := yaml.Unmarshal(b, &cfg)
 	if err != nil {

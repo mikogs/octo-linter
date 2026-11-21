@@ -40,11 +40,11 @@ type Linter struct {
 //nolint:gocognit,funlen
 func (l *Linter) Lint(dotGithub *dotgithub.DotGithub, output string, outputLimit int) (int, error) {
 	if l.Config == nil {
-		panic("Config cannot be nil")
+		return HasErrors, fmt.Errorf("config is nil")
 	}
 
 	if dotGithub == nil {
-		panic("DotGithub cannot be empty")
+		return HasErrors, fmt.Errorf("dotgithub is nil")
 	}
 
 	summary := newSummary()
@@ -111,27 +111,29 @@ func (l *Linter) Lint(dotGithub *dotgithub.DotGithub, output string, outputLimit
 			select {
 			case glitchInstance, more := <-warnCh:
 				if more {
+					glitchCopy := glitchInstance
 					slog.Warn(
-						glitchInstance.ErrText,
-						slog.String("path", glitchInstance.Path),
-						slog.String("rule", glitchInstance.RuleName),
+						glitchCopy.ErrText,
+						slog.String("path", glitchCopy.Path),
+						slog.String("rule", glitchCopy.RuleName),
 					)
 
-					glitchInstance.IsError = false
-					summary.addGlitch(&glitchInstance)
+					glitchCopy.IsError = false
+					summary.addGlitch(&glitchCopy)
 				} else {
 					warnCh = nil
 				}
 			case glitchInstance, more := <-errCh:
 				if more {
+					glitchCopy := glitchInstance
 					slog.Error(
-						glitchInstance.ErrText,
-						slog.String("path", glitchInstance.Path),
-						slog.String("rule", glitchInstance.RuleName),
+						glitchCopy.ErrText,
+						slog.String("path", glitchCopy.Path),
+						slog.String("rule", glitchCopy.RuleName),
 					)
 
-					glitchInstance.IsError = true
-					summary.addGlitch(&glitchInstance)
+					glitchCopy.IsError = true
+					summary.addGlitch(&glitchCopy)
 				} else {
 					errCh = nil
 				}
@@ -150,18 +152,18 @@ func (l *Linter) Lint(dotGithub *dotgithub.DotGithub, output string, outputLimit
 			continue
 		}
 
-		for ruleIdx, ruleEntry := range l.Config.Rules {
-			if ruleEntry.FileType()&rule.DotGithubFileTypeAction == 0 {
+		for _, ruleEntry := range l.Config.Rules {
+			if ruleEntry.Rule.FileType()&rule.DotGithubFileTypeAction == 0 {
 				continue
 			}
 
-			isError := l.Config.IsError(ruleEntry.ConfigName(rule.DotGithubFileTypeAction))
+			isError := l.Config.IsError(ruleEntry.Rule.ConfigName(rule.DotGithubFileTypeAction))
 			chJobs <- Job{
-				rule:      ruleEntry,
+				rule:      ruleEntry.Rule,
 				file:      action,
 				dotGithub: dotGithub,
 				isError:   isError,
-				value:     l.Config.Values[ruleIdx],
+				value:     ruleEntry.Value,
 			}
 
 			summary.numJob.Add(1)
@@ -178,18 +180,18 @@ func (l *Linter) Lint(dotGithub *dotgithub.DotGithub, output string, outputLimit
 			continue
 		}
 
-		for ruleIdx, ruleEntry := range l.Config.Rules {
-			if ruleEntry.FileType()&rule.DotGithubFileTypeWorkflow == 0 {
+		for _, ruleEntry := range l.Config.Rules {
+			if ruleEntry.Rule.FileType()&rule.DotGithubFileTypeWorkflow == 0 {
 				continue
 			}
 
-			isError := l.Config.IsError(ruleEntry.ConfigName(rule.DotGithubFileTypeWorkflow))
+			isError := l.Config.IsError(ruleEntry.Rule.ConfigName(rule.DotGithubFileTypeWorkflow))
 			chJobs <- Job{
-				rule:      ruleEntry,
+				rule:      ruleEntry.Rule,
 				file:      workflow,
 				dotGithub: dotGithub,
 				isError:   isError,
-				value:     l.Config.Values[ruleIdx],
+				value:     ruleEntry.Value,
 			}
 
 			summary.numJob.Add(1)
