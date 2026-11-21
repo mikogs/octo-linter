@@ -106,6 +106,7 @@ func (cfg *Config) readBytesAndValidate(b []byte) error {
 				cfg.WarningOnly[fullRuleName] = struct{}{}
 			}
 
+			//nolint:typecheck
 			err := cfg.addRuleFromConfig(fullRuleName, ruleConfig)
 			if err != nil {
 				return fmt.Errorf("rule %s has invalid config: %w", fullRuleName, err)
