@@ -31,6 +31,13 @@ linters:
       - linters:
           - dupl
         path: internal/linter/rule/refvars
+      - linters:
+          - gofumpt
+          - gci
+          - modernize
+          - nolintlint
+          - perfsprint
+        path: internal/linter/generated_config_rules.go
 formatters:
   enable:
     - gci
